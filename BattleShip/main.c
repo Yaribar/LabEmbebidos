@@ -8,7 +8,7 @@
 
 // ***********************   Macros  **********************
 
-// Manual Modex 
+// Manual Modex
 #define ERR 1
 #define OK 0
 
@@ -42,8 +42,8 @@ char err_ht = 0, err_vt = 0;
 char rep_err = 0;
 
 // Auto Mode
-time_t t;
-int Tableboard[11][11];
+// time_t t;
+// int Tableboard[11][11];
 
 // Gameplay
 int pl_one_agree = 0;
@@ -94,29 +94,70 @@ struct tableBoard createBoard() {
   return playerBoard;
 };
 
-void printPlayerBoard(char playersBoard[11][11]) {
-
-  //   printf(BLU "blue\n"    RESET);
-  for (char i = 0; i < 11; i++) {
-    for (char j = 0; j < 11; j++) {
-      if (playersBoard[i][j] < 10) {
-        if ((i > 0 && j == 0) || (i == 0 && j > 0)) {
-          printf(" %i ", playersBoard[i][j]);
-        } else if (i == 0 && j == 0) {
-          printf(" %i ", playersBoard[i][j]);
-        } else {
-          printf(CYN " %i " RESET, playersBoard[i][j]);
+void printPlayerBoard(char playersBoard[11][11]){
+    
+    for (char i = 0; i < 11; i++){
+        for (char j = 0; j<11; j++){
+            if (i + j == 0){
+                printf("   ");
+            }
+            else if (playersBoard[i][j] < 10){
+                if ((i > 0 && j == 0) || (i == 0 && j > 0)){
+                    printf(" %i ",playersBoard[i][j]);
+                }
+                else if (i == 0 && j == 0){
+                    printf(" %i ",playersBoard[i][j]);
+                }
+                else if (playersBoard[i][j] == 0){
+                    printf(BLU " %i " RESET,playersBoard[i][j]);
+                }
+              else{
+                    printf(YEL " %i " RESET,playersBoard[i][j]);
+                }
+            }
+            else{
+                if ((i > 0 && j == 0) || (i == 0 && j > 0)){
+                    printf("%i ",playersBoard[i][j]);
+                }
+            }
         }
-      } else {
-        if ((i > 0 && j == 0) || (i == 0 && j > 0)) {
-          printf("%i ", playersBoard[i][j]);
-        } else {
-          printf(BLU "%i " RESET, playersBoard[i][j]);
-        }
-      }
+        printf("\n\n");
     }
-    printf("\n\n");
-  }
+}
+
+void printPlayerBoardwColor(char playersBoard[11][11]){
+    
+    for (char i = 0; i < 11; i++){
+        for (char j = 0; j < 11; j++){
+        
+            if (i + j == 0){
+                printf("   ");
+            }
+            else if ((i == 0 && j > 0) || (i > 0 && j == 0)){  // first row and column
+                if (playersBoard[i][j] < 10){
+                    printf(" %i ",playersBoard[i][j]);
+                }
+                else{
+                    printf("%i ",playersBoard[i][j]);
+                }
+            }
+            else{
+                if (playersBoard[i][j] == 0){
+                    printf(BLU " * " RESET);
+                }
+                else if (playersBoard[i][j] == 1){
+                    printf(BLU " * " RESET);
+                }
+                else if (playersBoard[i][j] == 2){
+                    printf(RED " X " RESET);
+                }
+                else{
+                    printf(YEL " * " RESET);
+                }
+            }
+        }
+        printf("\n\n");
+    }
 }
 
 struct shipPos {
@@ -201,86 +242,79 @@ struct shipPos randomPosition(char upper, char lower) {
   return details;
 };
 
-void placeShip(char playersBoard[11][11], char shipSize, char rnd_pos[3],
-               char identifier) {
-  char x_pos = rnd_pos[0];
-  char y_pos = rnd_pos[1];
+void placeShip(char playersBoard[11][11],char shipSize, char rnd_pos[3], char identifier){
+    char x_pos = rnd_pos[0];
+    char y_pos = rnd_pos[1];
+    char horizontal_free, vertical_free;
 
-  if (rnd_pos[2] == 1) { // Arrange horizontally
-    if (playersBoard[x_pos + (shipSize - 1)][y_pos] == 0 &&
-        x_pos + (shipSize) <= 11) { // first try going down
-      if (playersBoard[x_pos][y_pos] + playersBoard[x_pos + 1][y_pos] +
-              playersBoard[x_pos + 2][y_pos] + playersBoard[x_pos + 3][y_pos] +
-              playersBoard[x_pos + 4][y_pos] !=
-          0) {
-        srand(time(NULL));
-        x_pos = (rand() % 10) + 1;
-        y_pos = (rand() % 10) + 1;
-      }
+    if (rnd_pos[2] == 1){ //Arrange horizontally
+        if (playersBoard[x_pos + (shipSize - 1)][y_pos] == 0 && x_pos + (shipSize) <= 11){ //first try going down
+            horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos + 1][y_pos] + playersBoard[x_pos + 2][y_pos] + playersBoard[x_pos + 3][y_pos] + playersBoard[x_pos + 4][y_pos];
+            if (horizontal_free != 0){
+                srand(time(NULL));
+                x_pos = (rand() % 10)+1;
+                y_pos = (rand() % 10)+1;
+                horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos + 1][y_pos] + playersBoard[x_pos + 2][y_pos] + playersBoard[x_pos + 3][y_pos] + playersBoard[x_pos + 4][y_pos];
+            }
 
-      for (char i = 0; i < shipSize; i++) {
-        playersBoard[x_pos + i][y_pos] = identifier;
-      }
-    } else {
-      if (playersBoard[x_pos][y_pos] + playersBoard[x_pos - 1][y_pos] +
-              playersBoard[x_pos - 2][y_pos] + playersBoard[x_pos - 3][y_pos] +
-              playersBoard[x_pos - 4][y_pos] !=
-          0) {
-        srand(time(NULL));
-        x_pos = (rand() % 10) + 1;
-        y_pos = (rand() % 10) + 1;
-      }
-
-      for (char i = 0; i < shipSize; i++) {
-        playersBoard[x_pos - i][y_pos] = identifier;
-      }
-    }
-  } else {
-    if (playersBoard[x_pos][y_pos + (shipSize - 1)] == 0 &&
-        y_pos + (shipSize) <= 11) { // first try going right
-      if (shipSize > 2) {
-        if (playersBoard[rnd_pos[0]][rnd_pos[1]] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] + 1] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] + 2] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] + 3] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] + 4] !=
-            0) {
-          srand(time(NULL));
-          x_pos = (rand() % 10) + 1;
-          y_pos = (rand() % 10) + 1;
+            for (char i = 0; i< shipSize; i++){
+                playersBoard[x_pos + i][y_pos] = identifier;
+            }
         }
-      }
-      for (char j = 0; j < shipSize; j++) {
-        playersBoard[x_pos][y_pos + j] = identifier;
-      }
-    } else {
-      if (shipSize > 2) {
-        if (playersBoard[rnd_pos[0]][rnd_pos[1]] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] - 1] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] - 2] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] - 3] +
-                playersBoard[rnd_pos[0]][rnd_pos[1] - 4] !=
-            0) {
-          srand(time(NULL));
-          x_pos = (rand() % 10) + 1;
-          y_pos = (rand() % 10) + 1;
+        else {
+            horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos - 1][y_pos] + playersBoard[x_pos - 2][y_pos] + playersBoard[x_pos - 3][y_pos] + playersBoard[x_pos - 4][y_pos];
+            if (horizontal_free != 0){
+                srand(time(NULL));
+                x_pos = (rand() % 10)+1;
+                y_pos = (rand() % 10)+1;
+                horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos - 1][y_pos] + playersBoard[x_pos - 2][y_pos] + playersBoard[x_pos - 3][y_pos] + playersBoard[x_pos - 4][y_pos];
+            }
+
+            for (char i = 0; i< shipSize; i++){
+                playersBoard[x_pos - i][y_pos] = identifier;
+            }
         }
-      }
-      for (char j = 0; j < shipSize; j++) {
-        playersBoard[x_pos][y_pos - j] = identifier;
-      }
     }
-  }
+    else{
+        if (playersBoard[x_pos][y_pos + (shipSize - 1)] == 0 && y_pos + (shipSize) <= 11){ //first try going right
+            vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] + 1] + playersBoard[rnd_pos[0]][rnd_pos[1] + 2] + playersBoard[rnd_pos[0]][rnd_pos[1] + 3] + playersBoard[rnd_pos[0]][rnd_pos[1] + 4];
+            if (shipSize > 2){
+                if (vertical_free != 0){
+                    srand(time(NULL));
+                    x_pos = (rand() % 10)+1;
+                    y_pos = (rand() % 10)+1;
+                    vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] + 1] + playersBoard[rnd_pos[0]][rnd_pos[1] + 2] + playersBoard[rnd_pos[0]][rnd_pos[1] + 3] + playersBoard[rnd_pos[0]][rnd_pos[1] + 4];
+                }
+            }
+            for (char j = 0; j< shipSize; j++){
+                playersBoard[x_pos][y_pos + j] = identifier;
+            }
+        }
+        else {
+            vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] - 1] + playersBoard[rnd_pos[0]][rnd_pos[1] - 2] + playersBoard[rnd_pos[0]][rnd_pos[1] - 3] + playersBoard[rnd_pos[0]][rnd_pos[1] - 4];
+            if (shipSize > 2){
+                if ( vertical_free!= 0){
+                    srand(time(NULL));
+                    x_pos = (rand() % 10)+1;
+                    y_pos = (rand() % 10)+1;
+                    vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] - 1] + playersBoard[rnd_pos[0]][rnd_pos[1] - 2] + playersBoard[rnd_pos[0]][rnd_pos[1] - 3] + playersBoard[rnd_pos[0]][rnd_pos[1] - 4];
+                }
+            }
+            for (char j = 0; j< shipSize; j++){
+                playersBoard[x_pos][y_pos - j] = identifier;
+            }
+        }
+    }
 }
 
 void randomAllocator(char playerssBoard[11][11], char two_slot_ship[3],
                      char three_one_slot_ship[3], char three_two_slot_ship[3],
                      char four_slot_ship[3], char five_slot_ship[3]) {
-  placeShip(playerssBoard, 2, two_slot_ship, 11);
-  placeShip(playerssBoard, 3, three_one_slot_ship, 12);
-  placeShip(playerssBoard, 3, three_two_slot_ship, 13);
-  placeShip(playerssBoard, 4, four_slot_ship, 14);
-  placeShip(playerssBoard, 5, five_slot_ship, 15);
+  placeShip(playerssBoard, 2, two_slot_ship, 1);
+  placeShip(playerssBoard, 3, three_one_slot_ship, 1);
+  placeShip(playerssBoard, 3, three_two_slot_ship, 1);
+  placeShip(playerssBoard, 4, four_slot_ship, 1);
+  placeShip(playerssBoard, 5, five_slot_ship, 1);
 }
 
 // Gameplay
@@ -428,14 +462,14 @@ void setManual(char playerssBoard[11][11]) {
             err_h = 1;
             printf("Excede los limites del tablero esta orientacion\n");
             getchar();
-            printf("%d\n",limit_err);
+            printf("%d\n", limit_err);
           }
         } else if (orientacion == 'V') {
           if ((x + barcos[n_barco]) > size_board) {
             err_v = 1;
             printf("Excede los limites del tablero esta orientacion\n");
             getchar();
-            printf("%d\n",limit_err);
+            printf("%d\n", limit_err);
           }
         }
         limit_err = limit_err + err_h + err_v;
@@ -492,10 +526,15 @@ int getAgree() {
 int hitShip(char backend[limit][limit], char frontend[limit][limit], int x,
             int y, int counter) {
   int val = backend[x][y];
+
   if (val) {
     frontend[x][y] = 2;
     printf("\n*************Ouch \n");
     counter += 1;
+  }
+  else if (val == 0){
+    frontend[x][y] = 3;
+    printf("\n*************You missed!!!! \n");
   }
   return counter;
 }
@@ -540,7 +579,7 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells) {
       num_cells_pone =
           hitShip(second_p.playerBoard.board, second_p.frontendBoard.board,
                   x_axis, y_axis, num_cells_pone);
-      printPlayerBoard(second_p.frontendBoard.board);
+      printPlayerBoardwColor(second_p.frontendBoard.board);
       first_p.turn = 0;
       second_p.turn = 1;
     } while (first_p.turn == 1);
@@ -553,7 +592,7 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells) {
       num_cells_ptwo =
           hitShip(first_p.playerBoard.board, first_p.frontendBoard.board,
                   x_axis, y_axis, num_cells_pone);
-      printPlayerBoard(first_p.frontendBoard.board);
+      printPlayerBoardwColor(first_p.frontendBoard.board);
       first_p.turn = 1;
       second_p.turn = 0;
     } while (second_p.turn == 1);
@@ -604,13 +643,4 @@ int orientation(char n_barco, char playerssBoard[11][11]) {
     }
   }
   return OK;
-}
-
-void printBoard(char playerssBoard[11][11]) {
-  for (int i = 0; i < 11; i++) {
-    for (int j = 0; j < 11; j++) {
-      printf("%d ", playerssBoard[i][j]);
-    }
-    printf("\n");
-  }
 }
