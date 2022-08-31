@@ -243,68 +243,74 @@ struct shipPos randomPosition(char upper, char lower) {
 };
 
 void placeShip(char playersBoard[11][11],char shipSize, char rnd_pos[3], char identifier){
-    char x_pos = rnd_pos[0];
-    char y_pos = rnd_pos[1];
-    char horizontal_free, vertical_free;
+  char x_pos = rnd_pos[0];
+  char y_pos = rnd_pos[1];
+  char case_select = rnd_pos[2];
+  char horizontal_free, vertical_free;
+  int iteration = 0;
 
-    if (rnd_pos[2] == 1){ //Arrange horizontally
-        if (playersBoard[x_pos + (shipSize - 1)][y_pos] == 0 && x_pos + (shipSize) <= 11){ //first try going down
-            horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos + 1][y_pos] + playersBoard[x_pos + 2][y_pos] + playersBoard[x_pos + 3][y_pos] + playersBoard[x_pos + 4][y_pos];
-            if (horizontal_free != 0){
-                srand(time(NULL));
-                x_pos = (rand() % 10)+1;
-                y_pos = (rand() % 10)+1;
-                horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos + 1][y_pos] + playersBoard[x_pos + 2][y_pos] + playersBoard[x_pos + 3][y_pos] + playersBoard[x_pos + 4][y_pos];
-            }
-
-            for (char i = 0; i< shipSize; i++){
-                playersBoard[x_pos + i][y_pos] = identifier;
-            }
-        }
-        else {
-            horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos - 1][y_pos] + playersBoard[x_pos - 2][y_pos] + playersBoard[x_pos - 3][y_pos] + playersBoard[x_pos - 4][y_pos];
-            if (horizontal_free != 0){
-                srand(time(NULL));
-                x_pos = (rand() % 10)+1;
-                y_pos = (rand() % 10)+1;
-                horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos - 1][y_pos] + playersBoard[x_pos - 2][y_pos] + playersBoard[x_pos - 3][y_pos] + playersBoard[x_pos - 4][y_pos];
-            }
-
-            for (char i = 0; i< shipSize; i++){
-                playersBoard[x_pos - i][y_pos] = identifier;
-            }
-        }
-    }
-    else{
-        if (playersBoard[x_pos][y_pos + (shipSize - 1)] == 0 && y_pos + (shipSize) <= 11){ //first try going right
-            vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] + 1] + playersBoard[rnd_pos[0]][rnd_pos[1] + 2] + playersBoard[rnd_pos[0]][rnd_pos[1] + 3] + playersBoard[rnd_pos[0]][rnd_pos[1] + 4];
-            if (shipSize > 2){
-                if (vertical_free != 0){
-                    srand(time(NULL));
-                    x_pos = (rand() % 10)+1;
-                    y_pos = (rand() % 10)+1;
-                    vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] + 1] + playersBoard[rnd_pos[0]][rnd_pos[1] + 2] + playersBoard[rnd_pos[0]][rnd_pos[1] + 3] + playersBoard[rnd_pos[0]][rnd_pos[1] + 4];
-                }
-            }
-            for (char j = 0; j< shipSize; j++){
-                playersBoard[x_pos][y_pos + j] = identifier;
-            }
-        }
-        else {
-            vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] - 1] + playersBoard[rnd_pos[0]][rnd_pos[1] - 2] + playersBoard[rnd_pos[0]][rnd_pos[1] - 3] + playersBoard[rnd_pos[0]][rnd_pos[1] - 4];
-            if (shipSize > 2){
-                if ( vertical_free!= 0){
-                    srand(time(NULL));
-                    x_pos = (rand() % 10)+1;
-                    y_pos = (rand() % 10)+1;
-                    vertical_free = playersBoard[rnd_pos[0]][rnd_pos[1]] + playersBoard[rnd_pos[0]][rnd_pos[1] - 1] + playersBoard[rnd_pos[0]][rnd_pos[1] - 2] + playersBoard[rnd_pos[0]][rnd_pos[1] - 3] + playersBoard[rnd_pos[0]][rnd_pos[1] - 4];
-                }
-            }
-            for (char j = 0; j< shipSize; j++){
-                playersBoard[x_pos][y_pos - j] = identifier;
-            }
-        }
-    }
+  switch(case_select){
+      case 1:
+          if (playersBoard[x_pos + (shipSize - 1)][y_pos] == 0 && x_pos + (shipSize) <= 11 && iteration == 0){  
+              horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos + 1][y_pos] + playersBoard[x_pos + 2][y_pos] + playersBoard[x_pos + 3][y_pos] + playersBoard[x_pos + 4][y_pos];
+              while (horizontal_free != 0 && iteration < 200){
+                  srand(time(NULL));
+                  x_pos = (rand() % 10)+1;
+                  y_pos = (rand() % 10)+1;
+                  horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos + 1][y_pos] + playersBoard[x_pos + 2][y_pos] + playersBoard[x_pos + 3][y_pos] + playersBoard[x_pos + 4][y_pos];
+                  iteration++;
+              }
+              if (iteration == 100){break;}
+              else{for (char i = 0; i< shipSize; i++){playersBoard[x_pos + i][y_pos] = identifier;}}
+              break;
+          }
+          else {
+              horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos - 1][y_pos] + playersBoard[x_pos - 2][y_pos] + playersBoard[x_pos - 3][y_pos] + playersBoard[x_pos - 4][y_pos];
+              iteration = 0;
+              while (horizontal_free != 0 && iteration < 200){
+                  srand(time(NULL));
+                  x_pos = (rand() % 10)+1;
+                  y_pos = (rand() % 10)+1;
+                  horizontal_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos - 1][y_pos] + playersBoard[x_pos - 2][y_pos] + playersBoard[x_pos - 3][y_pos] + playersBoard[x_pos - 4][y_pos];
+                  iteration++;
+              }
+              if (iteration == 100){
+                  iteration = 0;
+                  case_select = 0;
+                  break;
+              }
+              else{for (char i = 0; i< shipSize; i++){playersBoard[x_pos + i][y_pos] = identifier;}}
+              break;
+          }
+      case 0:
+          if (playersBoard[x_pos][y_pos + (shipSize - 1)] == 0 && y_pos + (shipSize) <= 11 && iteration == 0){ //first try going right
+              vertical_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos][y_pos + 1] + playersBoard[x_pos][y_pos + 2] + playersBoard[x_pos][y_pos + 3] + playersBoard[x_pos][y_pos + 4];
+              while (vertical_free != 0 && iteration < 200){
+                  srand(time(NULL));
+                  x_pos = (rand() % 10)+1;
+                  y_pos = (rand() % 10)+1;
+                  iteration++;
+                  vertical_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos][y_pos + 1] + playersBoard[x_pos][y_pos + 2] + playersBoard[x_pos][y_pos + 3] + playersBoard[x_pos][y_pos + 4];
+              }
+              if (iteration == 100){break;}
+              for (char j = 0; j< shipSize; j++){playersBoard[x_pos][y_pos + j] = identifier;}
+              break;
+          }
+          else {
+              iteration = 0;
+              vertical_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos][y_pos - 1] + playersBoard[x_pos][y_pos - 2] + playersBoard[x_pos][y_pos - 3] + playersBoard[x_pos][y_pos - 4];
+              while ( vertical_free!= 0 && iteration < 200){
+                  srand(time(NULL));
+                  x_pos = (rand() % 10)+1;
+                  y_pos = (rand() % 10)+1;
+                  vertical_free = playersBoard[x_pos][y_pos] + playersBoard[x_pos][y_pos - 1] + playersBoard[x_pos][y_pos - 2] + playersBoard[x_pos][y_pos - 3] + playersBoard[x_pos][y_pos - 4];
+              }
+              if (iteration == 100){iteration = 0; case_select = 1; break;}
+              for (char j = 0; j< shipSize; j++){playersBoard[x_pos][y_pos - j] = identifier;}
+              break;
+          }
+  }
+  iteration = 0;
 }
 
 void randomAllocator(char playerssBoard[11][11], char two_slot_ship[3],
