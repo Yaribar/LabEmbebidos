@@ -30,12 +30,11 @@
 // Manual Mode
 char board[11][11] = {0};
 char size_board = sizeof(board) / sizeof(board[0]);
-char barcos[5] = {5, 4, 3, 3, 2};
-char size_barcos = sizeof(barcos) / sizeof(barcos[0]);
-char orientacion;
+char ships[5] = {5, 4, 3, 3, 2};
+char size_ships = sizeof(ships) / sizeof(ships[0]);
+char ship_orientation;
 char rep = 0;
 char limit_err = 0, limit_errt = 0;
-char traslape = 0;
 int x, y;
 char err_h = 0, err_v = 0;
 char err_ht = 0, err_vt = 0;
@@ -55,16 +54,15 @@ int num_cells = 0;
 // ******************** Prototype Functions ****************
 
 // Manual Mode
-int msg_requerimientos(char n_barco, char playerssBoard[11][11]);
-int coordenadas(char x, char y, char playerssBoard[11][11]);
-int orientation(char n_barco, char playerssBoard[11][11]);
+int requirements_msg(char n_ship, char playerssBoard[11][11]);
+int coordinates(char x, char y, char playerssBoard[11][11]);
+int orientation(char n_ship, char playerssBoard[11][11]);
 void printBoard(char playerssBoard[11][11]);
 void setManual(char playerssBoard[11][11]);
 
 // Gameplay
 int getAgree();
-int hitShip(char backend[11][11], char frontend[11][11], int x, int y,
-            int counter);
+int hitShip(char backend[11][11], char frontend[11][11], int x, int y,int counter);
 int countCells(char backend[11][11]);
 int minCells(int a, int b);
 
@@ -447,13 +445,13 @@ void getModality(struct gamer players, int j) {
 }
 
 void setManual(char playerssBoard[11][11]) {
-  for (int n_barco = 0; n_barco < size_barcos; n_barco++) {
+  for (int n_ship = 0; n_ship < size_ships; n_ship++) {
 
     do {
       rep_err = 0;
 
       do {
-        rep = msg_requerimientos(n_barco, playerssBoard);
+        rep = requirements_msg(n_ship, playerssBoard);
       } while (rep != 0);
       limit_err = 0;
 
@@ -461,19 +459,19 @@ void setManual(char playerssBoard[11][11]) {
         err_h = 0;
         err_v = 0;
         printf("Horizontal: H\tVertical: V\n");
-        scanf("%c", &orientacion);
+        scanf("%c", &ship_orientation);
 
-        if (orientacion == 'H') {
-          if ((y + barcos[n_barco]) > size_board) {
+        if (ship_orientation == 'H') {
+          if ((y + ships[n_ship]) > size_board) {
             err_h = 1;
-            printf("Excede los limites del tablero esta orientacion\n");
+            printf("This orientation exceed the board limits\n");
             getchar();
             printf("%d\n", limit_err);
           }
-        } else if (orientacion == 'V') {
-          if ((x + barcos[n_barco]) > size_board) {
+        } else if (ship_orientation == 'V') {
+          if ((x + ships[n_ship]) > size_board) {
             err_v = 1;
-            printf("Excede los limites del tablero esta orientacion\n");
+            printf("This orientation exceed the board limits\n");
             getchar();
             printf("%d\n", limit_err);
           }
@@ -485,16 +483,16 @@ void setManual(char playerssBoard[11][11]) {
           err_ht = 0;
           err_vt = 0;
 
-          if (orientacion == 'H') {
-            if (orientation(n_barco, player_one.playerBoard.board)) {
+          if (ship_orientation == 'H') {
+            if (orientation(n_ship, player_one.playerBoard.board)) {
               err_ht = 1;
-              printf("El barco se traslapa con otro barco\n");
+              printf("The boat overlaps another boat\n");
               getchar();
             }
-          } else if (orientacion == 'V') {
-            if (orientation(n_barco, player_one.playerBoard.board)) {
+          } else if (ship_orientation == 'V') {
+            if (orientation(n_ship, player_one.playerBoard.board)) {
               err_vt = 1;
-              printf("El barco se traslapa con otro barco\n");
+              printf("The boat overlaps another boat\n");
               getchar();
             }
           }
@@ -505,7 +503,7 @@ void setManual(char playerssBoard[11][11]) {
                ((err_ht == 1 || err_vt == 1) && limit_err != 2));
 
       if (limit_err == 2 || limit_errt == 2) {
-        printf("Escoge otra coordenada\n");
+        printf("Choose another coordinate\n");
         rep = 1;
       }
     } while (rep_err == 1);
@@ -607,44 +605,42 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells) {
 
 // Manual
 
-int msg_requerimientos(char n_barco, char playerssBoard[11][11]) {
+int requirements_msg(char n_ship, char playerssBoard[11][11]) {
 
-  printf("Barco No. %d de tamaño %i. Escribe la coordenada en el "
-         "formato:x,y\n",
-         n_barco + 1, barcos[n_barco]);
+  printf("Ship No. %d of size %i. Write the coordinate in the Format x,y:\n",n_ship + 1, ships[n_ship]);
   scanf("%d,%d", &x, &y);
   getchar();
 
-  if (coordenadas(x, y, playerssBoard)) {
+  if (coordinates(x, y, playerssBoard)) {
     return ERR;
   }
   return OK;
 }
 
-int coordenadas(char x, char y, char playerssBoard[11][11]) {
+int coordinates(char x, char y, char playerssBoard[11][11]) {
   if (playerssBoard[x][y] == 1) {
-    printf("El barco no puede ser colocado en esa coordenada\n");
+    printf("The ship cannot be placed at that coordinate\n");
     return ERR;
   }
   return OK;
 }
 
-int orientation(char n_barco, char playerssBoard[11][11]) {
-  if (orientacion == 'H') {
-    for (int i = 1; i < barcos[n_barco]; i++) {
+int orientation(char n_ship, char playerssBoard[11][11]) {
+  if (ship_orientation == 'H') {
+    for (int i = 1; i < ships[n_ship]; i++) {
       if (board[x][y + i] == 1)
         return ERR;
     }
-    for (int i = 1; i < barcos[n_barco]; i++) {
+    for (int i = 1; i < ships[n_ship]; i++) {
       playerssBoard[x][y + i] = 1;
     }
-  } else if (orientacion == 'V') {
-    for (int i = 1; i < barcos[n_barco]; i++) {
+  } else if (ship_orientation == 'V') {
+    for (int i = 1; i < ships[n_ship]; i++) {
       if (playerssBoard[x + i][y] == 1) {
         return ERR;
       }
     }
-    for (int i = 1; i < barcos[n_barco]; i++) {
+    for (int i = 1; i < ships[n_ship]; i++) {
       playerssBoard[x + i][y] = 1;
     }
   }
