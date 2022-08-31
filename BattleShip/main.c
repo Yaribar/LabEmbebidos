@@ -454,6 +454,7 @@ void setManual(char playerssBoard[11][11]) {
         rep = requirements_msg(n_ship, playerssBoard);
       } while (rep != 0);
       limit_err = 0;
+      limit_errt = 0;
 
       do {
         err_h = 0;
@@ -484,13 +485,13 @@ void setManual(char playerssBoard[11][11]) {
           err_vt = 0;
 
           if (ship_orientation == 'H') {
-            if (orientation(n_ship, player_one.playerBoard.board)) {
+            if (orientation(n_ship, playerssBoard)) {
               err_ht = 1;
               printf("The boat overlaps another boat\n");
               getchar();
             }
           } else if (ship_orientation == 'V') {
-            if (orientation(n_ship, player_one.playerBoard.board)) {
+            if (orientation(n_ship, playerssBoard)) {
               err_vt = 1;
               printf("The boat overlaps another boat\n");
               getchar();
