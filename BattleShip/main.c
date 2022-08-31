@@ -407,6 +407,7 @@ int main() {
 
   // Finally, we do the game routine
   playRoutine(player_one, player_two, num_cells);
+
   return 0;
 }
 
@@ -528,8 +529,7 @@ int hitShip(char backend[limit][limit], char frontend[limit][limit], int x,
     frontend[x][y] = 2;
     printf("\n*************Ouch \n");
     counter += 1;
-  }
-  else if (val == 0){
+  } else if (val == 0) {
     frontend[x][y] = 3;
     printf("\n*************You missed!!!! \n");
   }
@@ -567,6 +567,7 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells) {
   num_cells_ptwo = 0;
   int x_axis;
   int y_axis;
+  printf("MIN CELLS %i\n", minn_cells);
   do {
     do {
       printf(
@@ -580,20 +581,28 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells) {
       first_p.turn = 0;
       second_p.turn = 1;
     } while (first_p.turn == 1);
+    if (num_cells_pone < minn_cells) {
+      do {
+        printf(
+            "%s, please choose a cell by entering it in the following format: ",
+            second_p.name);
+        scanf("%i, %i", &x_axis, &y_axis);
+        num_cells_ptwo =
+            hitShip(first_p.playerBoard.board, first_p.frontendBoard.board,
+                    x_axis, y_axis, num_cells_ptwo);
+        printPlayerBoardwColor(first_p.frontendBoard.board);
+        first_p.turn = 1;
+        second_p.turn = 0;
+      } while (second_p.turn == 1);
+    }
 
-    do {
-      printf(
-          "%s, please choose a cell by entering it in the following format: ",
-          second_p.name);
-      scanf("%i, %i", &x_axis, &y_axis);
-      num_cells_ptwo =
-          hitShip(first_p.playerBoard.board, first_p.frontendBoard.board,
-                  x_axis, y_axis, num_cells_pone);
-      printPlayerBoardwColor(first_p.frontendBoard.board);
-      first_p.turn = 1;
-      second_p.turn = 0;
-    } while (second_p.turn == 1);
-  } while (num_cells_pone < minn_cells || num_cells_ptwo < minn_cells);
+  } while ((num_cells_pone < minn_cells) && (num_cells_ptwo < minn_cells));
+  printf("GAME OVER. ");
+  if (num_cells_pone >= minn_cells) {
+    printf("%s, WINS", first_p.name);
+  } else {
+    printf("%s, WINS", second_p.name);
+  }
 }
 
 // Manual
