@@ -569,7 +569,7 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells) {
   do {
     do {
       printf(
-          "%s, please choose a cell by entering it in the following format: ",
+          "%s, please choose a cell by entering it in the following format x,y: ",
           first_p.name);
       scanf("%i, %i", &x_axis, &y_axis);
       num_cells_pone =
@@ -582,7 +582,7 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells) {
     if (num_cells_pone < minn_cells) {
       do {
         printf(
-            "%s, please choose a cell by entering it in the following format: ",
+            "%s, please choose a cell by entering it in the following format x,y: ",
             second_p.name);
         scanf("%i, %i", &x_axis, &y_axis);
         num_cells_ptwo =
