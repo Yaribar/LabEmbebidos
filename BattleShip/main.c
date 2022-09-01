@@ -460,14 +460,12 @@ void setManual(char playerssBoard[11][11]) {
             err_h = 1;
             printf("This orientation exceed the board limits\n");
             getchar();
-            printf("%d\n", limit_err);
           }
         } else if (ship_orientation == 'V') {
           if ((x + ships[n_ship]) > size_board) {
             err_v = 1;
             printf("This orientation exceed the board limits\n");
             getchar();
-            printf("%d\n", limit_err);
           }
         }
         limit_err = limit_err + err_h + err_v;
@@ -498,7 +496,7 @@ void setManual(char playerssBoard[11][11]) {
 
       if (limit_err == 2 || limit_errt == 2) {
         printf("Choose another coordinate\n");
-        rep = 1;
+        rep_err = 1;
       }
     } while (rep_err == 1);
 
