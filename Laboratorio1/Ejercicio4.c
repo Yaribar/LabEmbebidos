@@ -1,3 +1,9 @@
+/* Laboratorio 1 - Actividad4 
+• Realizar el corrimiento de un bit a lo largo de seis salidas digitales en la
+tarjeta, al llegar a cada extremo cambiar el sentido del corrimiento.
+• Utilizar dos LEDs para las salidas adicionales conectados a los pines
+GPIO_62 yGPIO_63
+*/
 #include <asf.h>
 #include "conf_gpio_peripheral_bus_example.h"
 
