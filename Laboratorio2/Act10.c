@@ -19,7 +19,7 @@ avr32_pwm_channel_t pwm_channel6 = {
     | (PWM_UPDATE_DUTY << AVR32_PWM_CMR_CPD_OFFSET)
     | AVR32_PWM_CMR_CPRE_MCK_DIV_2),
     */
-  .cdty = 0,
+  .cdty = 100,
   //.cdty = 0,
   .cprd = 100
 };
@@ -72,16 +72,6 @@ int main(void)
 
   // Draw the background AVR32 logo.
   et024006_PutPixmap(avr32_logo, 320, 0, 0, 0, 0, 320, 240);
-
-  /* Lets do a nice fade in by increasing the duty cycle */
-  /*while(pwm_channel6.cdty < pwm_channel6.cprd)
-  {
-    pwm_channel6.cdty++;
-    pwm_channel6.cupd = pwm_channel6.cdty;
-    //pwm_channel6.cdty--;
-    pwm_async_update_channel(AVR32_PWM_ENA_CHID6, &pwm_channel6);
-    delay_ms(10);
-  }*/
 
   while(true);
 }
