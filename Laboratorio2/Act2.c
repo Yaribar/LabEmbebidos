@@ -105,8 +105,8 @@ int main(void)
 			  current_up_state = gpio_get_pin_value(UP);
 		  }
 		  
-		  if (current_size == 5){
-			  current_size = 5;
+		  if (current_size == 4){
+			  current_size = 4;
 			  } else {
 			  current_size++;
 		  }
