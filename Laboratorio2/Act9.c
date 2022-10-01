@@ -60,8 +60,6 @@ static void tft_bl_init(void)
 #define DARKBLUE		0x0011
 #define FULLCIRCLE		255
 
-et024006_color_t color = 0xF800, new_color = 0xFFA0;
-uint8_t current_up_state, prev_up_state, current_down_state, prev_down_state;
 uint16_t rgb, rgb_plot;;
 
 uint16_t rgbto565(uint16_t r, uint16_t g, uint16_t b);
