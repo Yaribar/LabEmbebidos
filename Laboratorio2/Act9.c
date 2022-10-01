@@ -60,7 +60,7 @@ static void tft_bl_init(void)
 #define DARKBLUE		0x0011
 #define FULLCIRCLE		255
 
-uint16_t rgb, rgb_plot;;
+uint16_t rgb, rgb_plot;
 
 uint16_t rgbto565(uint16_t r, uint16_t g, uint16_t b);
 void circleFade(uint16_t r_initial, uint16_t g_initial, uint16_t b_initial, int16_t r_factor, int16_t g_factor, int16_t b_factor, int16_t r_limit, int16_t g_limit, int16_t b_limit, uint16_t initial_radius);
