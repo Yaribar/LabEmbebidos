@@ -1,10 +1,8 @@
-/* Laboratorio 2 - Ejercicio2 
-• Dibujar un tablero de ajedrez (8x8).Utilizar blanco y negro para los cuadros.
-• El tamaño inicial de cada “cuadro” deberá ser del tamaño de un pixel.
-• Al presionarla tecla “arriba” el tablero de ajedrez crecerá tal que cada cuadro mida 2x2 pixels.
-• Cada que se presione la tecla “arriba” el tamaño de cada cuadro crecerá en potencias de 2.
-• De igual manera al presionar la tecla “abajo”, el cuadro decrecerá en potencias de 2.
-• Limitar el tamaño mínimo y máximo para que la visualización en la pantalla sea adecuado.
+/* Laboratorio 2 - Ejercicio7 
+• Desplegar en todo el display la prueba de color utilizada en los sistemas de
+video.
+• Tomar en cuenta que en dicha prueba de color hay barras que muestran
+degradados de color y en escala de grises.
  */
 
 #include "board.h"
