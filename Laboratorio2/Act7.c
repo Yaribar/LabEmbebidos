@@ -103,14 +103,17 @@ void plotFineFade(uint16_t xfade_start, uint16_t yfade_start, uint16_t xfade_end
 	}
 }
 
+
 uint16_t rgbto565(uint16_t r, uint16_t g, uint16_t b) {
 	rgb = ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3);
 	//printf("%i\n", rgb);
 	return rgb;
 }
 
-void doFade(uint8_t r_start, uint8_t g_start, uint8_t b_start, uint8_t x_fade_start, uint8_t y_fade_start, uint8_t y_fade_size){
-  
+void doFade(uint16_t r_in, uint16_t g_in, uint16_t b_in, uint16_t x_fade_start, uint16_t y_fade_start, uint16_t y_fade_size){
+  uint16_t r_start = r_in;
+  uint16_t g_start = g_in;
+  uint16_t b_start = b_in;
   for (uint8_t i = 0; i < 28; i++){ //from red to yellow
     g_start += 9;
     if (g_start > 244){
@@ -118,11 +121,9 @@ void doFade(uint8_t r_start, uint8_t g_start, uint8_t b_start, uint8_t x_fade_st
     }
     newRGB = rgbto565(r_start, g_start, b_start);
     et024006_DrawFilledRect(x_fade_start + i,   y_fade_start, 1, y_fade_size, newRGB);
-    if(i == 27){
-      x_fade_start += i; 
-    }
+    
   }
-
+  x_fade_start += 27; 
 
   for (uint8_t i = 0; i < 28; i++){ //from yellow to green
     r_start -= 9;
@@ -131,39 +132,48 @@ void doFade(uint8_t r_start, uint8_t g_start, uint8_t b_start, uint8_t x_fade_st
       g_start = 252;
     }
     newRGB = rgbto565(r_start, g_start, b_start);
-    et024006_DrawFilledRect(x_fade_start + i,   y_fade_start, 1, y_fade_size, newRGB);
-    if(i == 27){
-      x_fade_start += i; 
-    }
+    et024006_DrawFilledRect(x_fade_start + i,   y_fade_start, 1, y_fade_size, newRGB); 
   }
+  x_fade_start += 27;
+  b_start = 0; 
 
-  
   for (uint8_t i = 0; i < 28; i++){ //from green to cyan
-    g_start -= (252/28);
-    b_start += (255/28);
+    g_start += 1;
+    b_start += 10;
+	if (g_start > 255){
+		g_start = 255;
+	}
+	if (b_start > 255){
+		b_start = 255;
+	}
     newRGB = rgbto565(r_start, g_start, b_start);
     et024006_DrawFilledRect(x_fade_start + i,   y_fade_start, 1, y_fade_size, newRGB);
-    if(i == 27){
-      x_fade_start += i; 
-    }
   }
-
+  x_fade_start += 27;
+  r_start = 0; 
   
   for (uint8_t i = 0; i < 28; i++){ //from cyan to dark blue
-    b_start -= 4;
+    g_start -= 10;
+	b_start -= 1;
+	if (b_start < 140){
+		b_start = 140;
+	}
+	if (g_start < 0){
+		g_start = 0;
+	}
     newRGB = rgbto565(r_start, g_start, b_start);
     et024006_DrawFilledRect(x_fade_start + i,   y_fade_start, 1, y_fade_size, newRGB);
-    if(i == 27){
-      x_fade_start += i; 
-    }
   }
-
+	x_fade_start += 27; 
 
   for (uint8_t i = 0; i < 28; i++){ //from dark blue to pink
     r_start += 9;
     g_start += 2;
     b_start += 2;
-    if (g_start > 53){
+    if (r_start > 255){
+	    r_start = 255;
+    }
+	if (g_start > 53){
       g_start = 53;
     }
     if (b_start > 184){
@@ -174,58 +184,30 @@ void doFade(uint8_t r_start, uint8_t g_start, uint8_t b_start, uint8_t x_fade_st
   }
 }
 
-/*void plotFade(uint16_t x_fade_start, uint16_t fade_size, uint16_t y_fade_start, uint16_t y_fade_size, et024006_color_t start_fade_color, et024006_color_t end_fade_color){
-	et024006_color_t start_mask1 = start_fade_color & 0xFF00;
-	et024006_color_t start_mask2 = start_fade_color & 0x00FF;
-	et024006_color_t end_mask1 = end_fade_color & 0xFF00;
-	et024006_color_t end_mask2 = end_fade_color & 0x00FF;
-	uint8_t first_factor_up, second_factor_up;
-	et024006_color_t step_first_factor, step_second_factor, next_step_first, next_step_second;
-	
-	if (start_mask1 > end_mask1){
-		step_first_factor = round((start_mask1 - end_mask1) / fade_size);
-		first_factor_up = 0;
-	} else {
-		step_first_factor = round((end_mask1 - start_mask1) / fade_size);
-		first_factor_up = 1;
-	}
-	
-	if (start_mask2 > end_mask2){
-		step_second_factor = round((start_mask2 - end_mask2) / fade_size);
-		second_factor_up = 0;
-		} else {
-		step_second_factor = round((end_mask2 - start_mask2) / fade_size);
-		second_factor_up = 1;
-	}
-	
-	for (uint16_t m = 0; m < fade_size; m++){
-		if (first_factor_up == 1 && second_factor_up == 1){
-			start_fade_color += (step_second_factor + step_first_factor);
-			} else if (first_factor_up == 0 && second_factor_up == 1){
-			start_mask1 = start_fade_color & 0xFF00;
-			start_mask2 = start_fade_color & 0x00FF;
-			
-			next_step_first = start_mask1 - step_first_factor;
-			next_step_second = start_mask2 + step_second_factor;
-			
-			start_fade_color = (next_step_second + next_step_first);
-			
-			} else if (first_factor_up == 1 && second_factor_up == 0){
-			start_mask1 = start_fade_color & 0xFF00;
-			start_mask2 = start_fade_color & 0x00FF;
-			
-			next_step_first = start_mask1 + step_first_factor;
-			next_step_second = start_mask2 - step_second_factor;
-			
-			start_fade_color = (next_step_second + next_step_first);
-			
-			} else{
-			start_fade_color -= (step_second_factor + step_first_factor);
+void blacktoWhite12(uint16_t x_fade_start, uint16_t y_fade_start, uint16_t y_fade_size){
+	uint16_t r_b2w = 0;
+	uint16_t g_b2w = 0;
+	uint16_t b_b2w = 0;
+	uint16_t to_multiple = 0;
+	for (uint16_t i = 0; i < 180; i++){ //from red to yellow
+		r_b2w += 8;
+		g_b2w += 8;
+		b_b2w += 8;
+		if (i % 15 == 0){
+			to_multiple = i/21;
+			r_b2w = 21*to_multiple;
+			g_b2w = 21*to_multiple;
+			b_b2w = 21*to_multiple;
 		}
-		
-		et024006_DrawFilledRect(x_fade_start + m,   y_fade_start, 1, y_fade_size, start_fade_color);
+		if (r_b2w > 255){
+			r_b2w = 255;
+			g_b2w = 255;
+			b_b2w = 255;
+		}
+		newRGB = rgbto565(r_b2w, g_b2w, b_b2w);
+		et024006_DrawFilledRect(x_fade_start + i,   y_fade_start, 1, y_fade_size, newRGB);
 	}
-}*/
+}
 
 // Main function
 int main(void)
@@ -244,40 +226,14 @@ int main(void)
   // Clear the display i.e. make it brown
   et024006_DrawFilledRect(0 , 0, ET024006_WIDTH, ET024006_HEIGHT, BROWN);
   
+  // Functions to do proper screen test
   plotPatern(0, 0, 45, 150, WHITE, YELLOW, CYAN, GREEN, PINK, RED, BLUE);
   plotPatern(0, 150, 45, 30, BLUE, PINK, YELLOW, RED, CYAN, BLACK, WHITE);
-  
-  /*for( uint16_t i = 0; i < 160 ; i++ )
-  {
-  et024006_DrawFilledRect(i,   180, 1, 30, (2*i/10 | (4*i/10<<5) | (2*i/10<<11) ));
-  }*/
-  /*for( uint16_t i = 0; i < 160 ; i++ )
-  {
-	  if (i > 139){
-		  et024006_DrawFilledRect(2*(160-i)-2,   180, 2, 30, (2*i/10 | (4*i/10<<5) | (2*i/10<<11) ));
-	  } else {
-		  et024006_DrawFilledRect(179-i,   180, 1, 30, (2*i/10 | (4*i/10<<5) | (2*i/10<<11) ));
-	  }
-		  
-  }*/
   plotFineFade(0,180,180,1,30);
-  et024006_DrawFilledRect(180, 180, 15, 30, BLACK);
-  et024006_DrawFilledRect(195, 180, 15, 30, RED);
-  for (uint16_t m = 0; m < 13; m++){
-		  et024006_DrawFilledRect(210+m,   180, 1, 30, color);
-		  color = color + 0x00A0;
-  }
-  et024006_DrawFilledRect(223, 180, 5, 30, YELLOW);
-  
-  /*for (uint16_t m = 0; m < 45; m++){
-	  et024006_DrawFilledRect(m,   210, 1, 30, new_color);
-	  new_color -=1449;
-  }*/
-  //plotFade(228, 8, 180, 30, YELLOW, GREEN);
-  //doFade(255, 244, 0, 0, 252, 0, 17, 228, 180, 30); // Fade from yellow to green
-  //doFade(0, 252, 0, 0, 0, 255, 17, 247, 180, 30); // Fade from green to cyan
-  //doFade(0, 0, 255, 0, 0, 140, 19, 264, 180, 30); // Fade from cyan to dark blue
-  //doFade(0, 0, 140, 255, 53, 184, 17, 284, 180, 30); //Fade from dark blue to pink
-  doFade(255, 0, 15, 180, 180, 30);
+  et024006_DrawFilledRect(180, 180, 5, 30, BLACK);
+  doFade(255, 0, 0, 185, 180, 30);
+  et024006_DrawFilledRect(291, 180, 2, 30, DARKBLUE);  ////CAMBIAR COLOR
+  blacktoWhite12(0, 210, 30);
+  et024006_DrawFilledRect(180, 210, 160, 30, BLACK);
   while(1);
 }
