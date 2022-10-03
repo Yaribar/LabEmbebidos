@@ -1,0 +1,104 @@
+/*****************************************************************************
+
+ */
+
+#include "board.h"
+#include "gpio.h"
+#include "pm.h"
+#include "delay.h"
+#include "flashc.h"
+#include "power_clocks_lib.h"
+#include "et024006dhu.h"
+#include "avr32_logo.h"
+#include "conf_clock.h"
+#include "time.h"
+
+char *array[15][20];
+char *vect[15];
+
+size_t size_row = sizeof(array) / sizeof(array[0]);
+size_t size_col = sizeof(array[0]) / sizeof(array[0][0]);
+
+#if BOARD == EVK1105
+#include "pwm.h"
+avr32_pwm_channel_t pwm_channel6 = {
+/*
+  .cmr = ((PWM_MODE_LEFT_ALIGNED << AVR32_PWM_CMR_CALG_OFFSET)
+    | (PWM_POLARITY_HIGH << AVR32_PWM_CMR_CPOL_OFFSET)
+    | (PWM_UPDATE_DUTY << AVR32_PWM_CMR_CPD_OFFSET)
+    | AVR32_PWM_CMR_CPRE_MCK_DIV_2),
+    */
+  .cdty = 100,
+  //.cdty = 0,
+  .cprd = 100
+};
+
+static void tft_bl_init(void)
+{
+
+  pwm_opt_t opt = {
+    .diva = 0,
+    .divb = 0,
+    .prea = 0,
+    .preb = 0
+  };
+  /* MCK = OSC0 = 12MHz
+   * Desired output 60kHz
+   * Chosen MCK_DIV_2
+   * CPRD = 12MHz / (60kHz * 2) = 100
+   *
+   * The duty cycle is 100% (CPRD = CDTY)
+   * */
+  pwm_init(&opt);
+  pwm_channel6.CMR.calg = PWM_MODE_LEFT_ALIGNED;
+  pwm_channel6.CMR.cpol = PWM_POLARITY_HIGH; //PWM_POLARITY_LOW;//PWM_POLARITY_HIGH;
+  pwm_channel6.CMR.cpd = PWM_UPDATE_DUTY;
+  pwm_channel6.CMR.cpre = AVR32_PWM_CMR_CPRE_MCK_DIV_2;
+
+  pwm_channel_init(6, &pwm_channel6);
+  pwm_start_channels(AVR32_PWM_ENA_CHID6_MASK);
+
+}
+#endif
+
+// Main function
+int main(void)
+{
+	pcl_switch_to_osc(PCL_OSC0, FOSC0, OSC0_STARTUP);
+	et024006_Init( FOSC0, FOSC0 );
+	tft_bl_init();
+
+	et024006_DrawFilledRect(0,0,ET024006_WIDTH,ET024006_HEIGHT,BLACK);
+	
+	srand(time(0));
+	
+	
+	while(1){
+		
+		for( int i = 0; i < size_col; i++){
+			for( int j = 0; j < size_row; j++){
+				vect[j] = array[j][i];
+			}
+			for( int j = 0; j < size_row-1; j++){
+				array[j+1][i] = vect[j];
+			}
+		}
+		
+		for( int j = 0; j < size_col; j++){
+			array[0][j] = (char*)(rand() % (96 - 32 + 1)) + 32;
+		}
+		
+		et024006_DrawFilledRect(0,0,ET024006_WIDTH,ET024006_HEIGHT,BLACK);
+
+		for(int i = 0;i< size_row; i++){
+			for( int j = 0 ; j < size_col; j ++){
+				et024006_PrintString(array[i][j], (const unsigned char *)&FONT6x8,16*j,16+16*i,GREEN,-1);
+			}
+		}
+		
+		delay_ms(100);
+		
+		
+	}
+
+}
