@@ -1,0 +1,59 @@
+int triangle_size = 22;
+float triangle_height = 1.75;
+color filled = #CC6600;
+
+
+void setup() {
+  size(320,240);
+  background(0);
+}
+
+void draw() {
+  
+  for(int row = 0; round(row*triangle_size/2*triangle_height) < height+round(triangle_size/2*triangle_height);row+=2){
+    for(int col = 0; col*triangle_size < width;col++){
+      stroke(filled);
+      triangle(-1+triangle_size*col,round(triangle_size/2*triangle_height)*row,triangle_size,1,2);
+      stroke(filled);
+      triangle(-triangle_size/2-1+triangle_size*col,round(triangle_size/2*triangle_height)*row-round(triangle_size/2*triangle_height)-1,triangle_size,0,2);
+      
+      stroke(filled);
+      triangle(-triangle_size/2+triangle_size*col,round(triangle_size/2*triangle_height)*row+round(triangle_size/2*triangle_height),triangle_size,1,2);
+      stroke(filled);
+      triangle(triangle_size*col,round(triangle_size/2*triangle_height)*row-1,triangle_size,0,2);  
+    }
+  }
+   
+
+}
+
+void triangle(int x_start, int y_start, int len, int up_down,int half_left_right){
+  int x_len = len;
+  if(half_left_right==0 || half_left_right > 1){
+    for(int x = 0; x< x_len/2; x++){
+      if(up_down == 1){
+        for(int y = 0; y < round(triangle_height*x);y++){
+          point(x_start+x,y_start+y);
+        }
+      }else{
+        for(int y = 0; y > -1*round(triangle_height*x);y--){
+          point(x_start+x,y_start+y);
+        }
+      }
+    }
+  }  
+  if(half_left_right==1 || half_left_right > 1){
+    for(int x = x_len/2; x> 0; x--){
+      if(up_down == 1){
+        for(int y = 0; y < round(triangle_height*x); y++){
+          point(x_start+x_len/2+(x_len/2)-x,y_start+y);
+        }
+      }else{
+        for(int y = 0; y < round(triangle_height*x); y++){
+          point(x_start+x_len/2+(x_len/2)-x,y_start-y);
+        }
+      }
+      
+    }
+  }
+}
