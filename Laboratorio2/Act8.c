@@ -65,6 +65,7 @@ static void tft_bl_init(void)
 
 void drawBorder(uint16_t x, uint16_t y, uint16_t w);
 void drawFirst (uint16_t x, uint16_t y, uint8_t m_x, uint8_t m_y);
+void drawsecond(uint16_t x, uint16_t y, uint8_t m_x, uint8_t m_y);
 
 // Main function
 int main(void)
@@ -84,8 +85,7 @@ int main(void)
   drawBorder(0,0,2);
   
   drawFirst(2,2,0,0);
-  drawFirst(2,2,1,0);
-
+  drawsecond(2,122,0,0);
 }
 
 // Bordes exteriores
@@ -99,52 +99,117 @@ void drawFirst (uint16_t x, uint16_t y, uint8_t m_x, uint8_t m_y)
 {
 	uint8_t em_x = 0;
 	uint8_t em_y = 0;
+	int8_t off_x = 0;
 	if (m_x == 0 && m_y == 0) // estandar
 	{
-		uint8_t em_x = 0;
-		uint8_t em_y = 0;
+		em_x = 0;
+		em_y = 0;
+		off_x = 1;
 	} else if (m_x && m_y)
 	{
 		x = 320-x;
 		y = 240-y;
-		uint8_t em_x = 1;
-		uint8_t em_y = 1;
+		em_x = 1;
+		em_y = 1;
+		
 	}
 	else if (m_x)
 	{
 		x = 320-x;
-		uint8_t em_x = 1;
+	    em_x = 1;
+		off_x = -1;
 	} else if (m_y)
 	{
 		y = 240-y;
-		uint8_t em_y = 1;		
+		em_y = 1;		
 	} 
 	
-		et024006_DrawFilledRect(x+80-em_x*6,y, 6, 8, BLACK); // Primer cuadro en esquina sup izq
-		et024006_DrawFilledRect(x+220-em_x*6,y, 6, 236/2, BLACK);
-		et024006_DrawFilledRect(x+226-em_x*90,y, 90, 8, YELLOW);
-		et024006_DrawFilledRect(x-em_x*316,y+8, 316, 2, BLACK); // Inicio de segunda fila
-		et024006_DrawFilledRect(x-em_x*58,y+32, 58, 2, BLACK);
-		et024006_DrawFilledRect(x-em_x*58,y+69, 58, 2, BLACK);
-		et024006_DrawFilledRect(x-em_x*58,y+69, 58, 2, BLACK);
-		et024006_DrawFilledRect(x-em_x*142,y+106, 142, 2, BLACK);
-		et024006_DrawFilledRect(x+58-em_x*6,y+10, 6, 98, BLACK);
-		et024006_DrawFilledRect(x-em_x*316,y+118, 316, 2, BLACK);
-		et024006_DrawFilledRect(x+64-em_x*156,y+10, 156, 42, RED);
-		et024006_DrawFilledRect(x+64-em_x*162,y+52, 162, 2, BLACK);
-		et024006_DrawFilledRect(x+64-em_x*76,y+54, 76, 20, BLACK);
-		et024006_DrawFilledRect(x+140-em_x*6,y+54, 6, 64, BLACK);
-		et024006_DrawFilledRect(x-em_x*58,y+71, 58, 35, YELLOW);
-		et024006_DrawFilledRect(x+146-em_x*76,y+62, 76, 2, BLACK);
-		et024006_DrawFilledRect(x+146-em_x*76,y+72, 76, 2, BLACK);
-		et024006_DrawFilledRect(x+146-em_x*76,y+74, 76, 10, BLACK);
-		et024006_DrawFilledRect(x+146-em_x*35,y+84, 35, 34, YELLOW);
-		et024006_DrawFilledRect(x+181-em_x*6,y+84, 6, 34, BLACK);
-		et024006_DrawFilledRect(x+226-em_x*90,y+10, 90, 21, YELLOW);
-		et024006_DrawFilledRect(x+226-em_x*90,y+31, 90, 2, BLACK);
-		et024006_DrawFilledRect(x+226-em_x*90,y+62, 90, 2, BLACK);
-		et024006_DrawFilledRect(x+226-em_x*90,y+72, 90, 2, BLACK);
-		et024006_DrawFilledRect(x+226-em_x*90,y+74, 90, 24, BLUE);
-		et024006_DrawFilledRect(x+226-em_x*90,y+99, 90, 2, BLACK);
-		et024006_DrawFilledRect(x+226-em_x*90,y+101, 90, 17, RED);		
+		et024006_DrawFilledRect(off_x*(x+80-em_x*6),y, 6, 8, BLACK); // Primer cuadro en esquina sup izq
+		et024006_DrawFilledRect(off_x*(x+220-em_x*6),y, 6, 236/2, BLACK);
+		et024006_DrawFilledRect(off_x*(x+226-em_x*90),y, 90, 8, YELLOW);
+		et024006_DrawFilledRect(off_x+x-em_x*316,y+8, 316, 2, BLACK); // Inicio de segunda fila
+		et024006_DrawFilledRect(off_x+x-em_x*58,y+32, 58, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x-em_x*58,y+69, 58, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x-em_x*58,y+69, 58, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x-em_x*142,y+106, 142, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+58-em_x*6,y+10, 6, 98, BLACK);
+		et024006_DrawFilledRect(off_x+x-em_x*316,y+118, 316, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+64-em_x*156,y+10, 156, 42, RED);
+		et024006_DrawFilledRect(off_x+x+64-em_x*162,y+52, 162, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+64-em_x*76,y+54, 76, 20, BLACK);
+		et024006_DrawFilledRect(off_x+x+140-em_x*6,y+54, 6, 64, BLACK);
+		et024006_DrawFilledRect(off_x+x-em_x*58,y+71, 58, 35, YELLOW);
+		et024006_DrawFilledRect(off_x+x+146-em_x*76,y+62, 76, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+146-em_x*76,y+72, 76, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+146-em_x*76,y+74, 76, 10, BLACK);
+		et024006_DrawFilledRect(off_x+x+146-em_x*35,y+84, 35, 34, YELLOW);
+		et024006_DrawFilledRect(off_x+x+181-em_x*6,y+84, 6, 34, BLACK);
+		et024006_DrawFilledRect(off_x+x+226-em_x*90,y+10, 90, 21, YELLOW);
+		et024006_DrawFilledRect(off_x+x+226-em_x*90,y+31, 90, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+226-em_x*90,y+62, 90, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+226-em_x*90,y+72, 90, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+226-em_x*90,y+74, 90, 25, BLUE);
+		et024006_DrawFilledRect(off_x+x+226-em_x*90,y+99, 90, 2, BLACK);
+		et024006_DrawFilledRect(off_x+x+226-em_x*90,y+101, 90, 17, RED);		
+
+}
+
+void drawsecond (uint16_t x, uint16_t y, uint8_t m_x, uint8_t m_y)
+{
+	uint8_t em_x = 0;
+	uint8_t em_y = 0;
+	int8_t off_x = 0;
+	if (m_x == 0 && m_y == 0) // estandar
+	{
+		em_x = 0;
+		em_y = 0;
+		off_x = 1;
+	} else if (m_x && m_y)
+	{
+		x = 320-x;
+		y = 240-y;
+		em_x = 1;
+		em_y = 1;
+		
+	}
+	else if (m_x)
+	{
+		x = 320-x;
+		em_x = 1;
+		off_x = -1;
+	} else if (m_y)
+	{
+		y = 240-y;
+		em_y = 1;
+	}
+	
+	et024006_DrawFilledRect(off_x*(x+80-em_x*6),y, 6, 8, BLACK); // Primer cuadro en esquina sup izq
+	et024006_DrawFilledRect(off_x*(x+220-em_x*6),y, 6, 236/2, BLACK);
+	et024006_DrawFilledRect(off_x*(x+226-em_x*90),y, 90, 8, YELLOW);
+
+	et024006_DrawFilledRect(off_x+x-em_x*316,y+8, 316, 2, BLACK); // Inicio de segunda fila
+	et024006_DrawFilledRect(off_x+x-em_x*58,y+32, 58, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x-em_x*58,y+69, 58, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x-em_x*58,y+69, 58, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x-em_x*142,y+106, 142, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+58-em_x*6,y+10, 6, 98, BLACK);
+	et024006_DrawFilledRect(off_x+x-em_x*316,y+118, 316, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+64-em_x*156,y+10, 156, 42, BLUE);
+	et024006_DrawFilledRect(off_x+x+64-em_x*162,y+52, 162, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+64-em_x*76,y+54, 76, 20, BLACK);
+	et024006_DrawFilledRect(off_x+x+140-em_x*6,y+54, 6, 64, BLACK);
+	et024006_DrawFilledRect(off_x+x-em_x*58,y+71, 58, 35, YELLOW);
+	et024006_DrawFilledRect(off_x+x+146-em_x*76,y+62, 76, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+146-em_x*76,y+72, 76, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+146-em_x*76,y+74, 76, 10, BLACK);
+	et024006_DrawFilledRect(off_x+x+146-em_x*35,y+84, 35, 34, RED);
+	et024006_DrawFilledRect(off_x+x+181-em_x*6,y+84, 6, 34, BLACK);
+	et024006_DrawFilledRect(off_x+x+226-em_x*90,y+10, 90, 21, BLUE);
+	et024006_DrawFilledRect(off_x+x+226-em_x*90,y+31, 90, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+226-em_x*90,y+62, 90, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+226-em_x*90,y+72, 90, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+226-em_x*90,y+74, 90, 25, BLUE);
+	et024006_DrawFilledRect(off_x+x+226-em_x*90,y+99, 90, 2, BLACK);
+	et024006_DrawFilledRect(off_x+x+226-em_x*90,y+101, 90, 17, YELLOW);
+
 }
