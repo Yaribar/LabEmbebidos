@@ -96,10 +96,12 @@ void drawBorder(uint16_t x, uint16_t y, uint16_t w)
 
 void drawFirst (uint16_t x, uint16_t y, uint8_t m_x, uint8_t m_y)
 {
+	uint8_t em_x = 0;
+	uint8_t em_y = 0;
 	if (m_x == 0 && m_y == 0) // estandar
 	{
-			uint8_t em_x = 0;
-			uint8_t em_y = 0;
+		uint8_t em_x = 0;
+		uint8_t em_y = 0;
 	} else if (m_x && m_y)
 	{
 		x = 320-x;
