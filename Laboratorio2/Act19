@@ -1,59 +1,152 @@
-int triangle_size = 22;
+/* Laboratorio 8
+• Diseñar una composición basada en el arte de Piet Mondrian abarcando la
+totalidad del área del LCD.
+• Elementos: fondo blanco, líneas horizontales y verticales negras. Tres colores:
+azul, amarillo y rojo.
+• Utilizarlas directivas de líneas y rectángulos.
+*/
+
+#include "board.h"
+#include "gpio.h"
+#include "power_clocks_lib.h"
+#include "et024006dhu.h"
+#include "delay.h"
+#include "avr32_logo.h"
+#include "conf_clock.h"
+#include "math.h"
+#include "time.h"
+
+#if BOARD == EVK1105
+#include "pwm.h"
+avr32_pwm_channel_t pwm_channel6 = {
+/*
+  .cmr = ((PWM_MODE_LEFT_ALIGNED << AVR32_PWM_CMR_CALG_OFFSET)
+    | (PWM_POLARITY_HIGH << AVR32_PWM_CMR_CPOL_OFFSET)
+    | (PWM_UPDATE_DUTY << AVR32_PWM_CMR_CPD_OFFSET)
+    | AVR32_PWM_CMR_CPRE_MCK_DIV_2),
+    */
+  .cdty = 100,
+  //.cdty = 0,
+  .cprd = 100
+};
+
+static void tft_bl_init(void)
+{
+
+  pwm_opt_t opt = {
+    .diva = 0,
+    .divb = 0,
+    .prea = 0,
+    .preb = 0
+  };
+  /* MCK = OSC0 = 12MHz
+   * Desired output 60kHz
+   * Chosen MCK_DIV_2
+   * CPRD = 12MHz / (60kHz * 2) = 100
+   *
+   * The duty cycle is 100% (CPRD = CDTY)
+   * */
+  pwm_init(&opt);
+  pwm_channel6.CMR.calg = PWM_MODE_LEFT_ALIGNED;
+  pwm_channel6.CMR.cpol = PWM_POLARITY_HIGH; //PWM_POLARITY_LOW;//PWM_POLARITY_HIGH;
+  pwm_channel6.CMR.cpd = PWM_UPDATE_DUTY;
+  pwm_channel6.CMR.cpre = AVR32_PWM_CMR_CPRE_MCK_DIV_2;
+
+  pwm_channel_init(6, &pwm_channel6);
+  pwm_start_channels(AVR32_PWM_ENA_CHID6_MASK);
+
+}
+#endif
+
+#define MAXH 30
+#define MAXW 60
+#define MIN 5
+#define RED 0xF800
+#define YELLOW 0xFFE0
+
+uint16_t rgb;
+
+void triangle(int x_start, int y_start, int len, int up_down,int half_left_right,et024006_color_t color);
+
+uint16_t rgbto565(uint16_t r, uint16_t g, uint16_t b) {
+	rgb = ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3);
+	//printf("%i\n", rgb);
+	return rgb;
+}
+
+int triangle_size = 24;
 float triangle_height = 1.75;
-color filled = #CC6600;
+et024006_color_t filled = 0xCC6600;
+et024006_color_t color;
 
 
-void setup() {
-  size(320,240);
-  background(0);
+// Main function
+int main(void)
+{
+	// Set CPU and PBA clock
+	pcl_switch_to_osc(PCL_OSC0, FOSC0, OSC0_STARTUP);
+
+	et024006_Init( FOSC0, FOSC0 );
+
+	/* PWM is fed by PBA bus clock which is by default the same
+	* as the CPU speed. We set a 0 duty cycle and thus keep the
+	* display black*/
+	tft_bl_init();
+	
+	srand(time(0));
+	
+	et024006_DrawFilledRect(0,0,ET024006_WIDTH,ET024006_HEIGHT, BLACK);
+	//+round(triangle_size/2*triangle_height)-40
+	for(int row = 0; round(row*triangle_size/2*triangle_height) < ET024006_HEIGHT;row+=2){
+		for(int col = 0; col*triangle_size < ET024006_WIDTH;col++){
+			//col_rnd_1 = (rand() % (upper - lower + 1)) + lower;
+			filled = (uint16_t)(rand()%(0xFFFFFF+1));
+			color = filled;
+			triangle(-1+triangle_size*col,round(triangle_size/2*triangle_height)*row,triangle_size,1,2,color);
+			color = filled;
+			triangle(-triangle_size/2-1+triangle_size*col,round(triangle_size/2*triangle_height)*row-round(triangle_size/2*triangle_height)-1,triangle_size,0,2,color);
+			
+			color = filled;
+			triangle(-triangle_size/2+triangle_size*col,round(triangle_size/2*triangle_height)*row+round(triangle_size/2*triangle_height),triangle_size,1,2,color);
+			color = filled;
+			triangle(triangle_size*col,round(triangle_size/2*triangle_height)*row-1,triangle_size,0,2,color);
+		}
+	}
+	
+
 }
 
-void draw() {
-  
-  for(int row = 0; round(row*triangle_size/2*triangle_height) < height+round(triangle_size/2*triangle_height);row+=2){
-    for(int col = 0; col*triangle_size < width;col++){
-      stroke(filled);
-      triangle(-1+triangle_size*col,round(triangle_size/2*triangle_height)*row,triangle_size,1,2);
-      stroke(filled);
-      triangle(-triangle_size/2-1+triangle_size*col,round(triangle_size/2*triangle_height)*row-round(triangle_size/2*triangle_height)-1,triangle_size,0,2);
-      
-      stroke(filled);
-      triangle(-triangle_size/2+triangle_size*col,round(triangle_size/2*triangle_height)*row+round(triangle_size/2*triangle_height),triangle_size,1,2);
-      stroke(filled);
-      triangle(triangle_size*col,round(triangle_size/2*triangle_height)*row-1,triangle_size,0,2);  
-    }
-  }
-   
-
-}
-
-void triangle(int x_start, int y_start, int len, int up_down,int half_left_right){
-  int x_len = len;
-  if(half_left_right==0 || half_left_right > 1){
-    for(int x = 0; x< x_len/2; x++){
-      if(up_down == 1){
-        for(int y = 0; y < round(triangle_height*x);y++){
-          point(x_start+x,y_start+y);
-        }
-      }else{
-        for(int y = 0; y > -1*round(triangle_height*x);y--){
-          point(x_start+x,y_start+y);
-        }
-      }
-    }
-  }  
-  if(half_left_right==1 || half_left_right > 1){
-    for(int x = x_len/2; x> 0; x--){
-      if(up_down == 1){
-        for(int y = 0; y < round(triangle_height*x); y++){
-          point(x_start+x_len/2+(x_len/2)-x,y_start+y);
-        }
-      }else{
-        for(int y = 0; y < round(triangle_height*x); y++){
-          point(x_start+x_len/2+(x_len/2)-x,y_start-y);
-        }
-      }
-      
-    }
-  }
+void triangle(int x_start, int y_start, int len, int up_down,int half_left_right,et024006_color_t color){
+	int x_len = len;
+	if(half_left_right==0 || half_left_right > 1){
+		for(int x = 0; x< x_len/2; x++){
+			if(up_down == 1){
+				for(int y = 0; y < round(triangle_height*x);y++){
+					//point(x_start+x,y_start+y);
+					et024006_DrawPixel(x_start+x,y_start+y, color );
+				}
+				}else{
+				for(int y = 0; y > -1*round(triangle_height*x);y--){
+					//point(x_start+x,y_start+y);
+					et024006_DrawPixel(x_start+x,y_start+y, color );
+				}
+			}
+		}
+	}
+	if(half_left_right==1 || half_left_right > 1){
+		for(int x = x_len/2; x> 0; x--){
+			if(up_down == 1){
+				for(int y = 0; y < round(triangle_height*x); y++){
+					//point(x_start+x_len/2+(x_len/2)-x,y_start+y);
+					et024006_DrawPixel(x_start+x_len/2+(x_len/2)-x,y_start+y, color );
+				}
+				}else{
+				for(int y = 0; y < round(triangle_height*x); y++){
+					//point(x_start+x_len/2+(x_len/2)-x,y_start-y);
+					et024006_DrawPixel(x_start+x_len/2+(x_len/2)-x,y_start-y, color );
+				}
+			}
+			
+		}
+	}
 }
