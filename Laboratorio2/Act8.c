@@ -84,6 +84,7 @@ int main(void)
   drawBorder(0,0,2);
   
   drawFirst(2,2,0,0);
+  drawFirst(2,2,1,0);
 
 }
 
@@ -143,7 +144,7 @@ void drawFirst (uint16_t x, uint16_t y, uint8_t m_x, uint8_t m_y)
 		et024006_DrawFilledRect(x+226-em_x*90,y+31, 90, 2, BLACK);
 		et024006_DrawFilledRect(x+226-em_x*90,y+62, 90, 2, BLACK);
 		et024006_DrawFilledRect(x+226-em_x*90,y+72, 90, 2, BLACK);
-		et024006_DrawFilledRect(x+226-em_x*90,y+74, 90, 25, BLUE);
+		et024006_DrawFilledRect(x+226-em_x*90,y+74, 90, 24, BLUE);
 		et024006_DrawFilledRect(x+226-em_x*90,y+99, 90, 2, BLACK);
 		et024006_DrawFilledRect(x+226-em_x*90,y+101, 90, 17, RED);		
 }
