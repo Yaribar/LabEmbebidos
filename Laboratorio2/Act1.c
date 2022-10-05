@@ -13,12 +13,10 @@
 #include "math.h"
 
 // Macros
-#define BLACK 0x0000;
-#define WHITE 0xFFFF;
-#define ET024006_WIDTH 320;
-#define ET024006_HEIGHT 240;
-#define OFFSET 40;
-#define LENGTH 30;
+#define BLACKS 0x0000
+#define WHITES 0xFFFF
+#define OFFSET 40
+#define LENGTH 30
 
 // Initialization of the board
 #if BOARD == EVK1105
@@ -52,7 +50,7 @@ static void tft_bl_init(void)
 
 // Variables
 uint32_t current_color;
-uint32_t previous_color;
+uint32_t previous_color = WHITES;
 
 int main(void)
 {
@@ -61,29 +59,32 @@ int main(void)
 
   tft_bl_init();   //We set a 0 duty cycle and thus keep the display black*/
 
-  et024006_DrawFilledRect(0 , 0, ET024006_WIDTH, ET024006_HEIGHT, BLACK );   // Clear the display i.e. make it black
+  et024006_DrawFilledRect(0 , 0, ET024006_WIDTH, ET024006_HEIGHT, BLACKS );   // Clear the display i.e. make it black
 
   for (int i=0; i<8; i++)
   {
     if (i%2 == 0)
     {
-      current_color = WHITE;
-    } else if (i%2 == 1)
+      current_color = WHITES;
+	  previous_color = BLACKS;
+    } else if (i%2 != 0)
     {
-      current_color = BLACK;
+      current_color = BLACKS;
+	  previous_color = WHITES;
     }
-    for (int j = 0; i<8; j++)
+    for (int j = 0; j<8; j++)
     {
-      if (previous_color == WHITE)
+	  
+      if (previous_color == WHITES)
       {
-        current_color = BLACK;
+        current_color = BLACKS;
       } else
       {
-        current_color = WHITE;
+        current_color = WHITES;
       }
-      et024006_DrawFilledRect(LENGTH*j+OFFSET, LENGTH*i, LENGTH, LENGTH, current_color);
+	  et024006_DrawFilledRect(LENGTH*j+OFFSET, LENGTH*i, LENGTH, LENGTH, current_color);
       previous_color = current_color;
     }
   }
-
+  return 0;
 }
