@@ -1,0 +1,188 @@
+/* Laboratorio 8
+• Diseñar una composición basada en el arte de Piet Mondrian abarcando la
+totalidad del área del LCD.
+• Elementos: fondo blanco, líneas horizontales y verticales negras. Tres colores:
+azul, amarillo y rojo.
+• Utilizarlas directivas de líneas y rectángulos.
+*/
+
+#include "board.h"
+#include "gpio.h"
+#include "power_clocks_lib.h"
+#include "et024006dhu.h"
+#include "delay.h"
+#include "avr32_logo.h"
+#include "conf_clock.h"
+#include "math.h"
+
+#if BOARD == EVK1105
+#include "pwm.h"
+avr32_pwm_channel_t pwm_channel6 = {
+/*
+  .cmr = ((PWM_MODE_LEFT_ALIGNED << AVR32_PWM_CMR_CALG_OFFSET)
+    | (PWM_POLARITY_HIGH << AVR32_PWM_CMR_CPOL_OFFSET)
+    | (PWM_UPDATE_DUTY << AVR32_PWM_CMR_CPD_OFFSET)
+    | AVR32_PWM_CMR_CPRE_MCK_DIV_2),
+    */
+  .cdty = 100,
+  //.cdty = 0,
+  .cprd = 100
+};
+
+static void tft_bl_init(void)
+{
+
+  pwm_opt_t opt = {
+    .diva = 0,
+    .divb = 0,
+    .prea = 0,
+    .preb = 0
+  };
+  /* MCK = OSC0 = 12MHz
+   * Desired output 60kHz
+   * Chosen MCK_DIV_2
+   * CPRD = 12MHz / (60kHz * 2) = 100
+   *
+   * The duty cycle is 100% (CPRD = CDTY)
+   * */
+  pwm_init(&opt);
+  pwm_channel6.CMR.calg = PWM_MODE_LEFT_ALIGNED;
+  pwm_channel6.CMR.cpol = PWM_POLARITY_HIGH; //PWM_POLARITY_LOW;//PWM_POLARITY_HIGH;
+  pwm_channel6.CMR.cpd = PWM_UPDATE_DUTY;
+  pwm_channel6.CMR.cpre = AVR32_PWM_CMR_CPRE_MCK_DIV_2;
+
+  pwm_channel_init(6, &pwm_channel6);
+  pwm_start_channels(AVR32_PWM_ENA_CHID6_MASK);
+
+}
+#endif
+
+#define MAXH 30
+#define MAXW 60
+#define MIN 5
+#define RED 0xF800
+#define YELLOW 0xFFE0
+
+et024006_color_t color;
+
+void rect4(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4,et024006_color_t color);
+
+uint16_t rgbto565(uint16_t r, uint16_t g, uint16_t b) {
+	rgb = ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3);
+	//printf("%i\n", rgb);
+	return rgb;
+}
+
+// Main function
+int main(void)
+{
+
+	// Set CPU and PBA clock
+	pcl_switch_to_osc(PCL_OSC0, FOSC0, OSC0_STARTUP);
+
+	et024006_Init( FOSC0, FOSC0 );
+
+	/* PWM is fed by PBA bus clock which is by default the same
+	* as the CPU speed. We set a 0 duty cycle and thus keep the
+	* display black*/
+	tft_bl_init();
+
+	et024006_DrawFilledRect(0,0,ET024006_WIDTH,ET024006_HEIGHT, BLACK);
+	color = rgbto565(50,50,50) 
+	rect4(33,10, 140,2, 33,180, 140,192,color);
+	color = rgbto565(20,20,20);
+	rect4(140,2, 143,5, 140,192, 143,188,color);
+	
+	
+	//White box upper left corner
+	color = rgbto565(255,255,255);
+	rect4(31,11, 87,5, 31,25, 87,21,color);
+	color = rgbto565(100,100,100);
+	rect4(87,5,89,6,87,21, 89,23,color);
+	
+	color = rgbto565(255,244,0);
+	rect4(87,2, 100,0, 87,12, 100,10,color);
+	color = rgbto565(133,140,1);
+	rect4(100,0,107,4,100,10, 107,14,color);
+	//rect4(87,12,100,10,93,15, 107,15);
+	
+	//white
+	color = rgbto565(255,255,255);
+	rect4(109,4, 119,3, 109,29, 119,28,color);
+	color = rgbto565(100,100,100);
+	rect4(119,3,121,4,119,28, 121,29,color);
+	
+	color = rgbto565(255,255,255);
+	rect4(124,1, 138,0, 124,11, 138,9,color);
+	color = rgbto565(100,100,100);
+	rect4(119,3,121,4,119,28, 121,29,color);
+	
+	//Yellow big box
+	color = rgbto565(255,244,0);
+	rect4(17,25, 75,20, 17,77, 75,75,color);
+	color = rgbto565(133,140,1);
+	rect4(75,20,88,26,75,75, 88,77,color);
+	rect4(17,77,75,75,38,79, 88,77,color);
+	
+	color = rgbto565(255,255,255);
+	rect4(92,18, 105,17, 92,93, 105,93,color);
+	color = rgbto565(100,100,100);
+	rect4(119,3,121,4,119,28, 121,29,color);
+	
+	//Blue box
+	color = rgbto565(0,0,255);
+	rect4(102,29, 113,28, 102,92, 113,92,color);
+	color = rgbto565(0,0,100);
+	rect4(113,28, 120,33, 113,92, 120,92,color);
+	
+	//Red box1
+	color = rgbto565(255,0,0);
+	rect4(120,13, 135,11, 120,25, 135,24,color);
+	color = rgbto565(94,0,0);
+	rect4(135,11, 140,15, 135,24, 140,27,color);
+	rect4(120,25, 135,24, 126,28, 140,27,color);
+	
+	//Red box
+	color = rgbto565(255,0,0);
+	rect4(42,98, 95,98, 42,155, 95,158,color);
+	color = rgbto565(94,0,0);
+	rect4(95,98, 103,98, 95,158, 103,154,color);
+	
+	//white box big right
+	color = rgbto565(255,255,255);
+	rect4(125,32, 138,31, 125,151, 138,152,color);
+	color = rgbto565(100,100,100);
+	rect4(119,3,121,4,119,28, 121,29,color);
+	
+	//lower left corner Blue box
+	color = rgbto565(0,0,255);
+	rect4(18,160, 35,162, 18,189, 35,190,color);
+	color = rgbto565(0,0,100);
+	rect4(18,160, 33,157, 18,160, 35,162,color);
+	rect4(33,157, 50,158, 35,162, 50,158,color);
+	rect4(35,162, 50,158, 35,190, 50,184,color);
+	
+	//white box botoom
+	color = rgbto565(255,255,255);
+	rect4(54,157, 117,161, 54,186, 117,191,color);
+	color = rgbto565(100,100,100);
+	rect4(119,3,121,4,119,28, 121,29,color);
+	
+	//Yellow big box
+	color = rgbto565(255,244,0);
+	rect4(118,164, 135,165, 118,194, 135,195,color);
+	color = rgbto565(133,140,1);
+	rect4(135,165,140,162,135,195, 140,192,color);
+	rect4(118,164,123,161,118,164, 135,165,color);
+	rect4(123,161,140,162,123,164, 135,165,color);
+	
+}
+
+void rect4(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4,et024006_color_t color){
+	float m = (float)(y2-y1)/((float)(x2-x1));
+	float m2 = (float)(y4-y3)/((float)(x4-x3));
+	for(int i = 0; i< (x2-x1); i++){
+		line(x1+i,y1+round(m*i),x1+i,y3+round(m2*i));
+		et024006_DrawLine(x1+i,y1+round(m*i),x1+i,y3+round(m2*i), color)
+	}
+}
