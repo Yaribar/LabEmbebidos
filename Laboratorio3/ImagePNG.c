@@ -19,3 +19,21 @@ uint16_t height)
 		}
 	}
 }
+
+void resize( color[] img,int width_img,int height_img,int x, int y,int scale){
+  a=0;
+  for(int i = 0; i< height_img*scale;i+=1*scale){
+    for(int j = 0; j< width_img*scale;j++){
+      for(int k = 0; k<scale;k++){
+        stroke(img[a/scale]);
+        point(x+j,y+i+k);
+        //println(a/scale);
+      } 
+      if(a<width_img*height_img*(scale)-1){
+        a++;
+      }  
+    }
+    
+  }
+  
+}
