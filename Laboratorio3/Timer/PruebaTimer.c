@@ -41,7 +41,6 @@
 #define LED0 59
 #define LED0 60
 
-
 #if !defined(EXAMPLE_TC) || !defined(EXAMPLE_TC_IRQ)
 #  error The TC preprocessor configuration to use in this example is missing.
 #endif
@@ -107,7 +106,7 @@ static void tc_irq(void)
 	// specify that an interrupt has been raised
 	update_timer = true;
 	// Toggle the GPIO line
-	gpio_tgl_gpio_pin(EXAMPLE_TOGGLE_PIN);
+	gpio_tgl_gpio_pin(LED0);
 }
 
 /**
