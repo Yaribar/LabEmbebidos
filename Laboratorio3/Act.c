@@ -59,7 +59,7 @@
 #define CHRONO 1
 #define APPS 2
 
-volatile ms10_tick = 0;
+volatile ms10_tick=0;
 volatile static uint32_t seconds_tick = 0, minutes_tick = 0, hours_tick = 0;
 uint32_t alarm_clock_seconds = 0, alarm_clock_minutes = 0, alarm_clock_hours = 0;
 
@@ -74,6 +74,7 @@ uint16_t k;
 uint8_t counter_center = 0;
 
 int selector;
+uint8_t start = 0;
 
 uint8_t fu = 0;
 uint8_t fd = 0;
@@ -159,10 +160,10 @@ __attribute__((__interrupt__)) static void tc_irq(void)
     tc_read_sr(EXAMPLE_TC, EXAMPLE_TC_CHANNEL);
 
     // Toggle the GPIO line
-    if (ms10_tick == 100)
-    {
-        gpio_tgl_gpio_pin(LED0);
-    }
+	if(ms10_tick==100){
+		gpio_tgl_gpio_pin(LED0);
+	}
+
 }
 
 static void tc_init(volatile avr32_tc_t *tc)
@@ -420,9 +421,8 @@ void reloj(void)
     // Botón de sabotage (segundos)
     drawColorHalf(gray_sabotage_logo, sabotage_logo, 0, 0, 0, 0, 45, 32, seconds_tick, 60);
 
-    // Botón de kill (minutos) AQUÍ CHECAR 200
-    drawColorHalf(gray_kill, kill_logo, 0, 0, 0, 200, 45, 32, minutes_tick, 60);
-
+void chronometer(void){
+    
 }
 
 void chronometer(void)
