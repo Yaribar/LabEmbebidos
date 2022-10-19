@@ -55,8 +55,13 @@ uint8_t current_left_state, current_right_state;
 uint8_t current_enter_state;
 uint16_t k;
 
-
 int selector;
+
+uint8_t fu=0;
+uint8_t fd=0;
+uint8_t fe=0;
+uint8_t fr=0;
+uint8_t fl=0;
 
 void intFlag(void);
 void reloj(void);
