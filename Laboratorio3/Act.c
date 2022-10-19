@@ -44,7 +44,7 @@
 #define CHRONO 1
 #define APPS 2
 
-volatile ms10_tick=0;
+volatile ms10_tick=0, second_tick=0;
 volatile static uint32_t seconds_tick = 0, minutes_tick = 0, hours_tick = 0;
 uint32_t alarm_clock_seconds=0, alarm_clock_minutes=0, alarm_clock_hours=0;
 
@@ -71,6 +71,7 @@ void setAlarm(int hour, int minutes, int seconds);
 int checkAlarm(int hour, int minutes, int seconds);
 void newMask(et024006_color_t new_mask_color);
 void background(void);
+void resetClockCounter(void);
 
 #if BOARD == EVK1105
 
@@ -126,6 +127,7 @@ static void tc_irq(void)
     // Toggle the GPIO line
 	if(ms10_tick==100){
 		gpio_tgl_gpio_pin(LED0);
+        second_tick=1;
 	}
 
 }
@@ -295,12 +297,14 @@ void intFlag(void){
             current_left_state  =   gpio_get_pin_value(LEFT);
             current_enter_state =   gpio_get_pin_value(ENTER);
 
-            if (current_up_state != 0){
+            if (current_up_state != 0){         //BOTON ARRIBA
+                fu = 1;
                 delay_ms(300);
 
             }
-            if (current_down_state != 0){
+            if (current_down_state != 0){       //BOTON ABAJO
                 delay_ms(300);
+                fd = 1;
 
             }
             if (current_right_state != 0){      //BOTON DERECHO
@@ -317,7 +321,7 @@ void intFlag(void){
                 delay_ms(300);
 
             }
-            if (current_enter_state != 0){
+            if (current_enter_state != 0){      //BOTON ENTER
                 delay_ms(300);
                 
             }
@@ -330,7 +334,22 @@ void reloj(void){
 }
 
 void chronometer(void){
-    
+    //Boton start
+    if(fu && start == 0 && reset == 1){
+        start = 1;
+    }
+    else if(fu && start == 1){
+        start = 0;
+    }
+
+    if(start && second){
+        clockCounter();
+    }
+    //Boton stop
+    if(fd){
+        resetClockCounter();
+    }
+    //restart
 }
 
 void apps(void){
@@ -487,4 +506,10 @@ void clockCounter(void){
 		seconds_tick = 0;
 		minutes_tick = 0;
 	}
+}
+
+void resetClockCounter(void){
+    seconds_tick = 0;
+    minutes_tick = 0;
+    hours_tick = 0;
 }
