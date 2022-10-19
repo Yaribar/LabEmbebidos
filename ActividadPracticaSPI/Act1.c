@@ -29,10 +29,10 @@ La comunicación se iniciará cuando se oprima la tecla RIGHT del Touch y tendr�
 #define EXAMPLE_PDCA_CLOCK_HSB        AVR32_PDCA_CLK_HSB
 #define EXAMPLE_PDCA_CLOCK_PB         AVR32_PDCA_CLK_PBA
 
-const char *WIFI[200]; //2048 caracteres
+#define RIGHT QT1081_TOUCH_SENSOR_RIGHT
+
+char WIFI[2048]; //2048 
 uint16_t wifi_size = sizeof(WIFI) / sizeof(WIFI[0]);
-
-
 
 int main(void)
 {
@@ -60,20 +60,23 @@ int main(void)
 	// Initialize USART in RS232 mode.
 	usart_init_rs232(EXAMPLE_USART, &USART_OPTIONS, EXAMPLE_TARGET_PBACLK_FREQ_HZ);
 
-	for (int i = 48; i<=126; i++)
+	for (int i = 0; i<=wifi_size; i++)
 	{
-		WIFI[i]=(char)i;
+		WIFI[i]=(char)97; //a
 	}
-	//for(int i = 0;i< wifi_size;i++){
-		usart_write_line(EXAMPLE_USART, "Hello\r\n");
-	//}
+	WIFI[wifi_size-1]='\0';
+	
+	while(1){
+		if(gpio_get_pin_value(RIGHT)==true){
+			for(int i=0;i<wifi_size;i++){
+				usart_putchar(EXAMPLE_USART, (int)WIFI[i]);
+			}
+			usart_write_line(EXAMPLE_USART,"\r\n");
+		}
+	}
 
-	// Press enter to continue.
-	while (usart_get_echo_line(EXAMPLE_USART) == USART_FAILURE);  // Get and echo characters until end of line.
 
-	usart_write_line(EXAMPLE_USART, "Goodbye.\r\n");
 
-	while (true);
 }
 
 
