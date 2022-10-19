@@ -49,6 +49,7 @@
 #define LEVEL 3
 #define NLINE 1
 #define LED0 LED0_GPIO
+#define LED1 LED1_GPIO
 #define UP 54
 #define DOWN 55
 #define RIGHT 56
@@ -59,13 +60,15 @@
 #define CHRONO 1
 #define APPS 2
 
-volatile ms10_tick=0;
+volatile ms10_tick=0,second = 0;
 volatile static uint32_t seconds_tick = 0, minutes_tick = 0, hours_tick = 0;
 uint32_t alarm_clock_seconds = 0, alarm_clock_minutes = 0, alarm_clock_hours = 0;
 
 uint16_t int_flag = 0;
+int alarma= 0;
 
 uint8_t first_hour = 0, first_minute = 0, first_second = 0;
+uint8_t first_hour_alarm = 0, first_minute_alarm = 0, first_second_alarm = 0;
 
 uint8_t current_up_state, current_down_state;
 uint8_t current_left_state, current_right_state;
@@ -592,7 +595,7 @@ const unsigned short int back[] = {
 0x800,0x800,0x800,0x0,0x0,0x0,0x0,0x800,0x800,0x0
 }
 
-const unsigned short int back[] = {
+const unsigned short int side[] = {
     0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
@@ -791,7 +794,7 @@ void reloj(void);
 void chronometer(void);
 void apps(void);
 void setAlarm(int hour, int minutes, int seconds);
-int  checkAlarm(int hour, int minutes, int seconds);
+int  checkAlarm();
 void newMask(et024006_color_t new_mask_color);
 void background(void);
 void DrawImage(
@@ -856,6 +859,7 @@ __attribute__((__interrupt__)) static void tc_irq(void)
     // Toggle the GPIO line
 	if(ms10_tick==100){
 		gpio_tgl_gpio_pin(LED0);
+		second = 1;
 	}
 
 }
@@ -1029,11 +1033,19 @@ void intFlag(void)
         if (current_up_state != 0)
         {
             fu = 1;
+		if (app_contador < 2)
+            {
+                app_contador++;
+            }
             delay_ms(300);
         }
         if (current_down_state != 0)
         {
             fd = 1;
+		if (app_contador > 0)
+            {
+                app_contador--;
+            }
             delay_ms(300);
         }
         if (current_right_state != 0)
@@ -1043,6 +1055,8 @@ void intFlag(void)
                 selector++;
             }
             fr = 1;
+		alarma = 0;
+		app_contador = 0;
             delay_ms(300);
         }
         if (current_left_state != 0)
@@ -1052,12 +1066,14 @@ void intFlag(void)
                 selector--;
             }
             fl = 1;
+		alarma = 0;
+		app_contador = 0;
             delay_ms(300);
         }
         if (current_enter_state != 0)
         {
             counter_center++;
-            if(counter_center == 4){
+            if(counter_center == 7){
                 counter_center = 0;
             }
             fe = 1;
@@ -1115,10 +1131,43 @@ void reloj(void)
         break;
 
     case (3):
-        clockCounter(first_hour, first_minute, first_second);
+        if (fu)
+        {
+            first_hour_alarm++;
+            fu = 0;
+        }
+        else if (fd)
+        {
+            first_hour_alarm--;
+            fd = 0;
+        }
         break;
-    }
-
+    case (4):
+        if (fu)
+        {
+            first_minute_alarm++;
+            fu = 0;
+        }
+        else if (fd)
+        {
+            first_minute_alarm--;
+            fd = 0;
+        }
+        break;
+	case(5):
+		setAlarm(first_hour_alarm, first_minute_alarm,0);
+        break;
+	case(6):
+		if(second){
+			clockCounter(first_hour, first_minute, first_second);
+			if(checkAlarm()){
+				alarma = 1
+			}
+			if(alarma){
+				gpio_tgl_gpio_pin(LED1);
+			}
+			second = 0;
+		}
     // Interfaz de Among Us cambia cada segundo
     if (ms10_tick == 100)
     {
@@ -1140,7 +1189,9 @@ void reloj(void)
     et024006_PrintString(48+seconds_tick, (const unsigned char *)&FONT6x8,0,200,GREEN,-1);
     et024006_PrintString(48+minutes_tick, (const unsigned char *)&FONT6x8,270,200,GREEN,-1);
     et024006_PrintString(48+hours_tick, (const unsigned char *)&FONT6x8,200,0,GREEN,-1);
-
+ 
+ }
+	
 void chronometer(void){
             //Boton start
     if(fu && start == 0 ){
@@ -1166,21 +1217,28 @@ void chronometer(void){
 
 void apps(void)
 {
-    // Incrementamos o decrementamos contador 
-    if (fu && fu <2)
+   // Incrementamos o decrementamos contador 
+    if (fu && app_contador <2)
     {
         apps_selector+=1;
     }
-    if (fd && fd > 0)
+    if (fd && app_contador > 0)
     {
         apps_selector-=1;
     }
 
-    switch (app_selector)
+    switch (apps_selector)
     {
-        case (app_selector)
+        case 1:
+            putPixmap(compass, 320, 0, 0, 0, 320, 240);
+            break;
+        case 2:
+            putPixmap(google, 320, 0, 0, 0, 320, 240);
+            break;
+        case 3:
+            putPixmap(instagram, 320, 0, 0, 0, 320, 240);
+            break;
     }
-
 }
 
 void setAlarm(int hour, int minutes, int seconds)
@@ -1190,9 +1248,9 @@ void setAlarm(int hour, int minutes, int seconds)
     alarm_clock_hours = hour;
 }
 
-int checkAlarm(int hour, int minutes, int seconds)
+int checkAlarm()
 {
-    if ((alarm_clock_seconds == seconds) && (alarm_clock_minutes == minutes) && (alarm_clock_hours == hour))
+    if ((alarm_clock_seconds == seconds_tick) && (alarm_clock_minutes == minutes_tick) && (alarm_clock_hours == hours_tick))
     {
         return 1;
     }
