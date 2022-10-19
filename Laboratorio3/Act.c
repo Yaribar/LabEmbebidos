@@ -335,15 +335,18 @@ void reloj(void){
 
 void chronometer(void){
     //Boton start
-    if(fu && start == 0 && reset == 1){
+    if(fu && start == 0 ){
         start = 1;
+        fu = 0;
     }
     else if(fu && start == 1){
         start = 0;
+        fu = 0;
     }
 
     if(start && second){
         clockCounter();
+        second = 0;
     }
     //Boton stop
     if(fd){
