@@ -348,6 +348,7 @@ void intFlag(void)
             {
                 selector++;
             }
+            fr = 1;
             delay_ms(300);
         }
         if (current_left_state != 0)
@@ -356,6 +357,7 @@ void intFlag(void)
             {
                 selector--;
             }
+            fl = 1;
             delay_ms(300);
         }
         if (current_enter_state != 0)
@@ -370,6 +372,10 @@ void intFlag(void)
 
 void reloj(void)
 {
+    if (fe)
+    {
+        fe = 0;
+    }
 
     // Ajuste de hora, minutos y segundos
     switch (counter_center)
@@ -378,30 +384,36 @@ void reloj(void)
         if (fu)
         {
             first_hour++;
+            fu = 0;
         }
         else if (fd)
         {
             first_hour--;
+            fd = 0;
         }
         break;
     case (counter_center == 1):
         if (fu)
         {
             first_minute++;
+            fu = 0;
         }
         else if (fd)
         {
             first_minute--;
+            fd = 0;
         }
         break;
     case (counter_center == 2):
         if (fu)
         {
             first_second++;
+            fu = 0;
         }
         else if (fd)
         {
             first_second--;
+            fd = 0;
         }
         break;
     case (counter_center == 3):
@@ -419,18 +431,18 @@ void reloj(void)
     }
     
     // Botón de sabotage (segundos)
-    drawColorHalf(gray_sabotage_logo, sabotage_logo, 45, 0, 0, 0, 45, 32, seconds_tick, 60);
+    drawColorHalf(gray_sabotage_logo, sabotage_logo, 45, 0, 0, 200, 45, 32, seconds_tick, 60);
 
     // Botón de kill (minutos)
-    drawColorHalf(gray_kill_logo, kill_logo, 45, 0, 0, 0, 45, 32, minutes_tick, 60);    
+    drawColorHalf(gray_kill_logo, kill_logo, 45, 0, 270, 200, 45, 32, minutes_tick, 60);    
 
     // Imagen de Dead Body (horas)
-    putPixmap(dead_body, 45, 0, 0, 0, 45, 32);
+    putPixmap(dead_body, 45, 0, 200, 0, 45, 32);
 
     // Imprimimos valores de los contadores 
-    et024006_PrintString(48+seconds_tick, (const unsigned char *)&FONT6x8,16*j,16+16*i,GREEN,-1);
-    et024006_PrintString(48+seconds_tick, (const unsigned char *)&FONT6x8,16*j,16+16*i,GREEN,-1);
-    et024006_PrintString(48+seconds_tick, (const unsigned char *)&FONT6x8,16*j,16+16*i,GREEN,-1);
+    et024006_PrintString(48+seconds_tick, (const unsigned char *)&FONT6x8,0,200,GREEN,-1);
+    et024006_PrintString(48+minutes_tick, (const unsigned char *)&FONT6x8,270,200,GREEN,-1);
+    et024006_PrintString(48+hours_tick, (const unsigned char *)&FONT6x8,200,0,GREEN,-1);
 
 void chronometer(void){
     
@@ -442,6 +454,7 @@ void chronometer(void)
 
 void apps(void)
 {
+
 }
 
 void setAlarm(int hour, int minutes, int seconds)
