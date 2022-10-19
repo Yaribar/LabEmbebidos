@@ -59,7 +59,7 @@
 #define CHRONO 1
 #define APPS 2
 
-volatile ms10_tick=0;
+volatile ms10_tick=0, second = 0;
 volatile static uint32_t seconds_tick = 0, minutes_tick = 0, hours_tick = 0;
 uint32_t alarm_clock_seconds=0, alarm_clock_minutes=0, alarm_clock_hours=0;
 
@@ -71,6 +71,7 @@ uint8_t current_enter_state;
 uint16_t k;
 
 int selector;
+uint8_t start = 0;
 
 uint8_t fu=0;
 uint8_t fd=0;
@@ -161,6 +162,7 @@ static void tc_irq(void)
     // Toggle the GPIO line
 	if(ms10_tick==100){
 		gpio_tgl_gpio_pin(LED0);
+        second=1;
 	}
 
 }
@@ -369,7 +371,25 @@ void reloj(void){
 }
 
 void chronometer(void){
-    
+        //Boton start
+    if(fu && start == 0 ){
+        start = 1;
+        fu = 0;
+    }
+    else if(fu && start == 1){
+        start = 0;
+        fu = 0;
+    }
+
+    if(start && second){
+        clockCounter();
+        second = 0;
+    }
+    //Boton stop
+    if(fd){
+        resetClockCounter();
+    }
+    //restart
 }
 
 void apps(void){
