@@ -75,6 +75,7 @@ uint8_t counter_center = 0;
 
 int selector;
 uint8_t start = 0;
+uint8_t apps_selector = 0;
 
 uint8_t fu = 0;
 uint8_t fd = 0;
@@ -380,7 +381,7 @@ void reloj(void)
     // Ajuste de hora, minutos y segundos
     switch (counter_center)
     {
-    case (counter_center == 0):
+    case (0):
         if (fu)
         {
             first_hour++;
@@ -392,7 +393,7 @@ void reloj(void)
             fd = 0;
         }
         break;
-    case (counter_center == 1):
+    case (1):
         if (fu)
         {
             first_minute++;
@@ -404,7 +405,7 @@ void reloj(void)
             fd = 0;
         }
         break;
-    case (counter_center == 2):
+    case (2):
         if (fu)
         {
             first_second++;
@@ -416,7 +417,7 @@ void reloj(void)
             fd = 0;
         }
         break;
-    case (counter_center == 3):
+    case (3):
         clockCounter()
 
         break;
@@ -448,12 +449,23 @@ void chronometer(void){
     
 }
 
-void chronometer(void)
-{
-}
 
 void apps(void)
 {
+    // Incrementamos o decrementamos contador 
+    if (fu && fu <2)
+    {
+        apps_selector+=1;
+    }
+    if (fd && fd > 0)
+    {
+        apps_selector-=1;
+    }
+
+    switch (app_selector)
+    {
+        case (app_selector)
+    }
 
 }
 
