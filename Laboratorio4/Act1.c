@@ -559,6 +559,7 @@ void getModality(struct gamer players, int j)
     if (j == 0)
     {
         scanf("%i", &player_one.modality);
+
     }
     else
     {
@@ -830,4 +831,19 @@ int orientation(char n_ship, char playerssBoard[11][11])
         }
     }
     return OK;
+}
+
+void usart_read_line(char *lineRead, size_t len){
+	char line[len];
+	int  i = 0;
+	memset(lineRead, 0, len); 
+	
+	while(1) {
+		line[i] = usart_getchar(EXAMPLE_USART); //Si se llega a utilizar el buffer "line" hay que limpiarlo antes o cualquier otro buffer
+		if (line[i] == '\n') break;
+		i++;
+	}
+	line[i] = 0;
+	
+	strncpy(lineRead, line, len);
 }
