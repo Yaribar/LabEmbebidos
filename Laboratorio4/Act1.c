@@ -90,6 +90,11 @@ int hitShip(char backend[11][11], char frontend[11][11], int x, int y, int count
 int countCells(char backend[11][11]);
 int minCells(int a, int b);
 
+//Strings
+void usart_read_line(char *lineRead, size_t len);
+char* convertIntegerToChar(int N);
+void parseString(char *string_in, char *delimiter, float output_array[]);
+
 // ********************** Structures ***********************
 
 // Auto Mode
@@ -521,8 +526,7 @@ int main()
 	// Initialize USART in RS232 mode.
 	usart_init_rs232(EXAMPLE_USART, &USART_OPTIONS, EXAMPLE_TARGET_PBACLK_FREQ_HZ);
 
-    usart_write_line(EXAMPLE_USART,"Hi!\nAre you guys ready to have some fun? Sink your enemies' ships 
-        to be known as the king of the sea.\n\n");
+    usart_write_line(EXAMPLE_USART,"Hi!\nAre you guys ready to have some fun? Sink your enemies' ships to be known as the king of the sea.\n\n");
 
     // Get the players' names
     player_one = getNames(0);
@@ -633,18 +637,21 @@ void getModality(struct gamer players, int j)
 
     usart_write_line(EXAMPLE_USART,"\n");
     usart_write_line(EXAMPLE_USART,players.name);
-    usart_write_line(EXAMPLE_USART,", please select the number of the option that describes how you 
-           would like to accomodate your ships:\n1.- Manual\n2.- Automatic\n");
+    usart_write_line(EXAMPLE_USART,", please select the number of the option that describes how you would like to accomodate your ships:\n1.- Manual\n2.- Automatic\n");
     
     if (j == 0)
     {
         //scanf("%i", &player_one.modality);
-        player_one.modality=atoi(usart_read_line(EXAMPLE_USART));
+		char modality[2];
+		usart_read_line(modality,2);
+        player_one.modality=atoi(modality);
     }
     else
     {
         //scanf("%i", &player_two.modality);
-        player_two.modality=atoi(usart_read_line(EXAMPLE_USART));
+		char modality[2];
+		usart_read_line(modality,2);
+        player_two.modality=atoi(modality);
     }
 }
 
@@ -744,8 +751,7 @@ int getAgree()
     int temp_flag;
     //printf("Above you can see the resulting board. If you like it then please "
     //       "type Y, or if you want to change it please tipe N:\n");
-    usart_write_line(EXAMPLE_USART,"Above you can see the resulting board. If you like it then please 
-           type Y, or if you want to change it please tipe N:\n");       
+    usart_write_line(EXAMPLE_USART,"Above you can see the resulting board. If you like it then please type Y, or if you want to change it please tipe N:\n");       
     //scanf("%s", &temp_agree);
     temp_agree = usart_getchar(EXAMPLE_USART);
     if (temp_agree == 'N' || temp_agree == 'n')
@@ -756,7 +762,7 @@ int getAgree()
     {
         temp_flag = 1;
         //system("clear");
-        usart_putchar(EXAMPLE_USART, 12) //12 or 13
+        usart_putchar(EXAMPLE_USART, 12); //12 or 13
     }
     return temp_flag;
 }
@@ -885,13 +891,13 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells)
     {
         //printf("%s, WINS", first_p.name);
         usart_write_line(EXAMPLE_USART,first_p.name);
-        usart_write_line(", WINS");
+        usart_write_line(EXAMPLE_USART,", WINS");
     }
     else
     {
         //printf("%s, WINS", second_p.name);
         usart_write_line(EXAMPLE_USART,second_p.name);
-        usart_write_line(", WINS");
+        usart_write_line(EXAMPLE_USART,", WINS");
     }
 }
 
