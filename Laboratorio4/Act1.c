@@ -1,12 +1,36 @@
 // BATTLESHIP BY ZORRIEMBEBIDOS
 
 // *********************** Libraries **********************
+#include <avr32/io.h>
+#include "compiler.h"
+#include "board.h"
+#include "power_clocks_lib.h"
+#include "gpio.h"
+#include "usart.h"
+#include "string.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+
 // ***********************   Macros  **********************
+
+#define EXAMPLE_TARGET_PBACLK_FREQ_HZ FOSC0  // PBA clock target frequency, in Hz
+
+//USART1
+
+#define EXAMPLE_USART                 (&AVR32_USART0)
+#define EXAMPLE_USART_RX_PIN          AVR32_USART0_RXD_0_0_PIN
+#define EXAMPLE_USART_RX_FUNCTION     AVR32_USART0_RXD_0_0_FUNCTION
+#define EXAMPLE_USART_TX_PIN          AVR32_USART0_TXD_0_0_PIN
+#define EXAMPLE_USART_TX_FUNCTION     AVR32_USART0_TXD_0_0_FUNCTION
+#define EXAMPLE_USART_CLOCK_MASK      AVR32_USART0_CLK_PBA
+#define EXAMPLE_PDCA_CLOCK_HSB        AVR32_PDCA_CLK_HSB
+#define EXAMPLE_PDCA_CLOCK_PB         AVR32_PDCA_CLK_PBA
+
+#define RIGHT QT1081_TOUCH_SENSOR_RIGHT
 
 // Manual Modex
 #define ERR 1
@@ -112,36 +136,53 @@ void printPlayerBoard(char playersBoard[11][11])
         {
             if (i + j == 0)
             {
-                printf("   ");
+                //printf("   ");
+                usart_write_line(EXAMPLE_USART,"   ");
             }
             else if (playersBoard[i][j] < 10)
             {
                 if ((i > 0 && j == 0) || (i == 0 && j > 0))
                 {
-                    printf(" %i ", playersBoard[i][j]);
+                    //printf(" %i ", playersBoard[i][j]);
+                    usart_write_line(EXAMPLE_USART," ");
+                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART," ");
                 }
                 else if (i == 0 && j == 0)
                 {
-                    printf(" %i ", playersBoard[i][j]);
+                    //printf(" %i ", playersBoard[i][j]);
+                    usart_write_line(EXAMPLE_USART," ");
+                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART," ");
                 }
                 else if (playersBoard[i][j] == 0)
                 {
-                    printf(BLU " %i " RESET, playersBoard[i][j]);
+                    //printf(BLU " %i " RESET, playersBoard[i][j]);
+                    usart_write_line(EXAMPLE_USART," ");
+                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART," ");
                 }
                 else
                 {
-                    printf(YEL " %i " RESET, playersBoard[i][j]);
+                    //printf(YEL " %i " RESET, playersBoard[i][j]);
+                    usart_write_line(EXAMPLE_USART," ");
+                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART," ");
                 }
             }
             else
             {
                 if ((i > 0 && j == 0) || (i == 0 && j > 0))
                 {
-                    printf("%i ", playersBoard[i][j]);
+                    //printf("%i ", playersBoard[i][j]);
+                    usart_write_line(EXAMPLE_USART," ");
+                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART," ");
                 }
             }
         }
-        printf("\n\n");
+        //printf("\n\n");
+        usart_write_line(EXAMPLE_USART,"\n\n");
     }
 }
 
@@ -155,40 +196,52 @@ void printPlayerBoardwColor(char playersBoard[11][11])
 
             if (i + j == 0)
             {
-                printf("   ");
+                //printf("   ");
+                usart_write_line(EXAMPLE_USART,"  ");
             }
             else if ((i == 0 && j > 0) || (i > 0 && j == 0))
             { // first row and column
                 if (playersBoard[i][j] < 10)
                 {
-                    printf(" %i ", playersBoard[i][j]);
+                    //printf(" %i ", playersBoard[i][j]);
+                    usart_write_line(EXAMPLE_USART," ");
+                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART," ");
                 }
                 else
                 {
-                    printf("%i ", playersBoard[i][j]);
+                    //printf("%i ", playersBoard[i][j]);
+                    usart_write_line(EXAMPLE_USART," ");
+                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART," ");
                 }
             }
             else
             {
                 if (playersBoard[i][j] == 0)
                 {
-                    printf(BLU " * " RESET);
+                    //printf(BLU " * " RESET);
+                    usart_write_line(EXAMPLE_USART," * ");
                 }
                 else if (playersBoard[i][j] == 1)
                 {
-                    printf(BLU " * " RESET);
+                    //printf(BLU " * " RESET);
+                    usart_write_line(EXAMPLE_USART," * ");
                 }
                 else if (playersBoard[i][j] == 2)
                 {
-                    printf(RED " X " RESET);
+                    //printf(RED " X " RESET);
+                    usart_write_line(EXAMPLE_USART," X ");
                 }
                 else
                 {
-                    printf(YEL " * " RESET);
+                    //printf(YEL " * " RESET);
+                    usart_write_line(EXAMPLE_USART," * ");
                 }
             }
         }
-        printf("\n\n");
+        //printf("\n\n");
+        usart_write_line(EXAMPLE_USART,"\n\n");
     }
 }
 
@@ -444,6 +497,29 @@ int main()
     // Introduction to the game
     //printf("Hi!\nAre you guys ready to have some fun? Sink your enemies' ships "
     //       "to be known as the king of the sea.\n\n");
+    pcl_switch_to_osc(PCL_OSC0, FOSC0, OSC0_STARTUP);
+
+	static const gpio_map_t USART_GPIO_MAP =
+	{
+		{EXAMPLE_USART_RX_PIN, EXAMPLE_USART_RX_FUNCTION},
+		{EXAMPLE_USART_TX_PIN, EXAMPLE_USART_TX_FUNCTION}
+	};
+
+	// USART options.
+	static const usart_options_t USART_OPTIONS =
+	{
+		.baudrate     = 38400,
+		.charlength   = 8,
+		.paritytype   = USART_EVEN_PARITY,
+		.stopbits     = USART_2_STOPBITS,
+		.channelmode  = USART_NORMAL_CHMODE
+	};
+
+	// Assign GPIO to USART.
+	gpio_enable_module(USART_GPIO_MAP, sizeof(USART_GPIO_MAP) / sizeof(USART_GPIO_MAP[0]));
+
+	// Initialize USART in RS232 mode.
+	usart_init_rs232(EXAMPLE_USART, &USART_OPTIONS, EXAMPLE_TARGET_PBACLK_FREQ_HZ);
 
     usart_write_line(EXAMPLE_USART,"Hi!\nAre you guys ready to have some fun? Sink your enemies' ships 
         to be known as the king of the sea.\n\n");
@@ -534,13 +610,17 @@ struct gamer getNames(int i)
     struct gamer players;
     if (i == 0)
     {
-        printf("Please, enter first player's name:\n");
-        scanf("%s", players.name);
+        //printf("Please, enter first player's name:\n");
+        usart_write_line(EXAMPLE_USART,"Please, enter first player's name:\n");
+        //scanf("%s", players.name);
+        usart_read_line(players.name,50);
     }
     else
     {
-        printf("Please, enter second player's name:\n");
-        scanf("%s", players.name);
+        //printf("Please, enter second player's name:\n");
+        usart_write_line(EXAMPLE_USART,"Please, enter second player's name:\n");
+        //scanf("%s", players.name);
+        usart_read_line(players.name,50);
     }
     return players;
 }
@@ -558,12 +638,13 @@ void getModality(struct gamer players, int j)
     
     if (j == 0)
     {
-        scanf("%i", &player_one.modality);
-
+        //scanf("%i", &player_one.modality);
+        player_one.modality=atoi(usart_read_line(EXAMPLE_USART));
     }
     else
     {
-        scanf("%i", &player_two.modality);
+        //scanf("%i", &player_two.modality);
+        player_two.modality=atoi(usart_read_line(EXAMPLE_USART));
     }
 }
 
@@ -587,25 +668,28 @@ void setManual(char playerssBoard[11][11])
             {
                 err_h = 0;
                 err_v = 0;
-                printf("Horizontal: H\tVertical: V\n");
-                scanf("%c", &ship_orientation);
-
-                if (ship_orientation == 'H')
+                //printf("Horizontal: H\tVertical: V\n");
+                usart_write_line(EXAMPLE_USART,"Horizontal: H\tVertical: V\n");
+                //scanf("%c", &ship_orientation);
+                ship_orientation = usart_getchar(EXAMPLE_USART);
+                if (ship_orientation == 'H' || ship_orientation == 'h')
                 {
                     if ((y + ships[n_ship]) > size_board)
                     {
                         err_h = 1;
-                        printf("This orientation exceed the board limits\n");
-                        getchar();
+                        //printf("This orientation exceed the board limits\n");
+                        usart_write_line(EXAMPLE_USART,"This orientation exceed the board limits\n");
+                        //getchar();
                     }
                 }
-                else if (ship_orientation == 'V')
+                else if (ship_orientation == 'V' || ship_orientation == 'v')
                 {
                     if ((x + ships[n_ship]) > size_board)
                     {
                         err_v = 1;
-                        printf("This orientation exceed the board limits\n");
-                        getchar();
+                        //printf("This orientation exceed the board limits\n");
+                        usart_write_line(EXAMPLE_USART,"This orientation exceed the board limits\n");
+                        //getchar();
                     }
                 }
                 limit_err = limit_err + err_h + err_v;
@@ -616,22 +700,24 @@ void setManual(char playerssBoard[11][11])
                     err_ht = 0;
                     err_vt = 0;
 
-                    if (ship_orientation == 'H')
+                    if (ship_orientation == 'H' || ship_orientation == 'h')
                     {
                         if (orientation(n_ship, playerssBoard))
                         {
                             err_ht = 1;
-                            printf("The boat overlaps another boat\n");
-                            getchar();
+                            //printf("The boat overlaps another boat\n");
+                            usart_write_line(EXAMPLE_USART,"The boat overlaps another boat\n");
+                            //getchar();
                         }
                     }
-                    else if (ship_orientation == 'V')
+                    else if (ship_orientation == 'V' || ship_orientation == 'v')
                     {
                         if (orientation(n_ship, playerssBoard))
                         {
                             err_vt = 1;
-                            printf("The boat overlaps another boat\n");
-                            getchar();
+                            //printf("The boat overlaps another boat\n");
+                            usart_write_line(EXAMPLE_USART,"The boat overlaps another boat\n");
+                            //getchar();
                         }
                     }
                     limit_errt = limit_errt + err_ht + err_vt;
@@ -642,7 +728,8 @@ void setManual(char playerssBoard[11][11])
 
             if (limit_err == 2 || limit_errt == 2)
             {
-                printf("Choose another coordinate\n");
+                //printf("Choose another coordinate\n");
+                usart_write_line(EXAMPLE_USART,"Choose another coordinate\n");
                 rep_err = 1;
             }
         } while (rep_err == 1);
@@ -655,17 +742,21 @@ int getAgree()
 {
     char temp_agree;
     int temp_flag;
-    printf("Above you can see the resulting board. If you like it then please "
-           "type Y, or if you want to change it please tipe N:\n");
-    scanf("%s", &temp_agree);
-    if (temp_agree == 'N')
+    //printf("Above you can see the resulting board. If you like it then please "
+    //       "type Y, or if you want to change it please tipe N:\n");
+    usart_write_line(EXAMPLE_USART,"Above you can see the resulting board. If you like it then please 
+           type Y, or if you want to change it please tipe N:\n");       
+    //scanf("%s", &temp_agree);
+    temp_agree = usart_getchar(EXAMPLE_USART);
+    if (temp_agree == 'N' || temp_agree == 'n')
     {
         temp_flag = 0;
     }
     else
     {
         temp_flag = 1;
-        system("clear");
+        //system("clear");
+        usart_putchar(EXAMPLE_USART, 12) //12 or 13
     }
     return temp_flag;
 }
@@ -678,13 +769,15 @@ int hitShip(char backend[limit][limit], char frontend[limit][limit], int x,
     if (val)
     {
         frontend[x][y] = 2;
-        printf("\n*************Ouch \n");
+        //printf("\n*************Ouch \n");
+        usart_write_line(EXAMPLE_USART,"\n*************Ouch \n");
         counter += 1;
     }
     else if (val == 0)
     {
         frontend[x][y] = 3;
-        printf("\n*************You missed!!!! \n");
+        //printf("\n*************You missed!!!! \n");
+        usart_write_line(EXAMPLE_USART,"\n*************You missed!!!! \n");
     }
     return counter;
 }
@@ -731,15 +824,27 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells)
     num_cells_ptwo = 0;
     int x_axis;
     int y_axis;
-    printf("MIN CELLS %i\n", minn_cells);
+    //printf("MIN CELLS %i\n", minn_cells);
+    usart_write_line(EXAMPLE_USART,"MIN CELLS ");
+    usart_write_line(EXAMPLE_USART,convertIntegerToChar(minn_cells));
+    usart_write_line(EXAMPLE_USART,"\n");
     do
     {
         do
         {
-            printf(
-                "%s, please choose a cell by entering it in the following format x,y: ",
-                first_p.name);
-            scanf("%i, %i", &x_axis, &y_axis);
+            //printf(
+            //    "%s, please choose a cell by entering it in the following format x,y: ",
+            //    first_p.name);
+            usart_write_line(EXAMPLE_USART,first_p.name);
+            usart_write_line(EXAMPLE_USART,", please choose a cell by entering it in the following format x,y: ");
+            
+            //scanf("%i, %i", &x_axis, &y_axis);
+            char input[5];
+            float output[2];
+            usart_read_line(input,5);
+            parseString(input,",",output);
+            x_axis = (int)output[0];
+            y_axis = (int)output[1];
             num_cells_pone =
                 hitShip(second_p.playerBoard.board, second_p.frontendBoard.board,
                         x_axis, y_axis, num_cells_pone);
@@ -751,10 +856,19 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells)
         {
             do
             {
-                printf(
-                    "%s, please choose a cell by entering it in the following format x,y: ",
-                    second_p.name);
-                scanf("%i, %i", &x_axis, &y_axis);
+                //printf(
+                //    "%s, please choose a cell by entering it in the following format x,y: ",
+                //    second_p.name);
+                usart_write_line(EXAMPLE_USART,second_p.name);
+                usart_write_line(EXAMPLE_USART,", please choose a cell by entering it in the following format x,y: ");
+                //scanf("%i, %i", &x_axis, &y_axis);
+                char input[5];
+                float output[2];
+                usart_read_line(input,5);
+                parseString(input,",",output);
+                x_axis = (int)output[0];
+                y_axis = (int)output[1];
+
                 num_cells_ptwo =
                     hitShip(first_p.playerBoard.board, first_p.frontendBoard.board,
                             x_axis, y_axis, num_cells_ptwo);
@@ -765,14 +879,19 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells)
         }
 
     } while ((num_cells_pone < minn_cells) && (num_cells_ptwo < minn_cells));
-    printf("GAME OVER. ");
+    //printf("GAME OVER. ");
+    usart_write_line(EXAMPLE_USART,"GAME OVER. ");
     if (num_cells_pone >= minn_cells)
     {
-        printf("%s, WINS", first_p.name);
+        //printf("%s, WINS", first_p.name);
+        usart_write_line(EXAMPLE_USART,first_p.name);
+        usart_write_line(", WINS");
     }
     else
     {
-        printf("%s, WINS", second_p.name);
+        //printf("%s, WINS", second_p.name);
+        usart_write_line(EXAMPLE_USART,second_p.name);
+        usart_write_line(", WINS");
     }
 }
 
@@ -781,9 +900,22 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells)
 int requirements_msg(char n_ship, char playerssBoard[11][11])
 {
 
-    printf("Ship No. %d of size %i. Write the coordinate in the Format x,y:\n", n_ship + 1, ships[n_ship]);
-    scanf("%d,%d", &x, &y);
-    getchar();
+    //printf("Ship No. %d of size %i. Write the coordinate in the Format x,y:\n", n_ship + 1, ships[n_ship]);
+    usart_write_line(EXAMPLE_USART,"Ship No. ");
+    usart_write_char(EXAMPLE_USART,(char)(48+n_ship + 1));
+    usart_write_line(EXAMPLE_USART,"of size ");
+    usart_write_char(EXAMPLE_USART,(char)(48+ships[n_ship]));
+    usart_write_line(EXAMPLE_USART,"\n");
+
+    //scanf("%d,%d", &x, &y);
+    char *input[5];
+    float output[2];
+    usart_read_line(input,5);
+    parseString(input,",",output);
+    x=output[0];
+    y=output[1];
+    //getchar();
+
 
     if (coordinates(x, y, playerssBoard))
     {
@@ -846,4 +978,65 @@ void usart_read_line(char *lineRead, size_t len){
 	line[i] = 0;
 	
 	strncpy(lineRead, line, len);
+}
+
+void parseString(char *string_in, char *delimiter, float output_array[])
+{
+	char* pch; //create buffer
+	pch = strtok(string_in, delimiter); //begin parsing the values
+	uint8_t i = 0;
+	while (pch != NULL)
+	{
+		output_array[i] = atof(pch);
+		pch = strtok(NULL, delimiter);
+		i++;
+	}
+}
+
+char* convertIntegerToChar(int N)
+{
+ 
+    // Count digits in number N
+    int m = N;
+    int digit = 0;
+    while (m) {
+ 
+        // Increment number of digits
+        digit++;
+        m /= 10;
+    }
+ 
+    // Declare char array for result
+    char* arr;
+    // Declare duplicate char array
+    char arr1[digit];
+    // Memory allocation of array
+    arr = (char*)malloc(digit);
+ 
+    // Separating integer into digits and
+    // accommodate it to character array
+    int index = 0;
+    while (N) {
+ 
+        // Separate last digit from
+        // the number and add ASCII
+        // value of character '0' is 48
+        arr1[++index] = N % 10 + '0';
+ 
+        // Truncate the last
+        // digit from the number
+        N /= 10;
+    }
+ 
+    // Reverse the array for result
+    int i;
+    for (i = 0; i < index; i++) {
+        arr[i] = arr1[index - i];
+    }
+ 
+    // Char array truncate by null
+    arr[i] = '\0';
+ 
+    // Return char array
+    return (char*)arr;
 }
