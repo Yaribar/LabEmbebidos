@@ -10,12 +10,19 @@ La comunicación se iniciará cuando se oprima la tecla RIGHT del Touch y tendr�
 */
 
 #include <avr32/io.h>
+#include "board.h"
 #include "compiler.h"
 #include "board.h"
 #include "power_clocks_lib.h"
+#include "et024006dhu.h"
+#include "conf_clock.h"
 #include "gpio.h"
+#include "delay.h"
 #include "usart.h"
 #include "string.h"
+#include "pwm.h"
+
+
 
 #define EXAMPLE_TARGET_PBACLK_FREQ_HZ FOSC0  // PBA clock target frequency, in Hz
 
@@ -32,6 +39,7 @@ La comunicación se iniciará cuando se oprima la tecla RIGHT del Touch y tendr�
 
 #define RIGHT QT1081_TOUCH_SENSOR_RIGHT
 
+unsigned int photo[400];
 // Gameplay
 struct gamer
 {
@@ -43,11 +51,55 @@ struct gamer
 
 struct gamer player_one;
 
+avr32_pwm_channel_t pwm_channel6 = {
+/*
+  .cmr = ((PWM_MODE_LEFT_ALIGNED << AVR32_PWM_CMR_CALG_OFFSET)
+    | (PWM_POLARITY_HIGH << AVR32_PWM_CMR_CPOL_OFFSET)
+    | (PWM_UPDATE_DUTY << AVR32_PWM_CMR_CPD_OFFSET)
+    | AVR32_PWM_CMR_CPRE_MCK_DIV_2),
+    */
+  .cdty = 100,
+  //.cdty = 0,
+  .cprd = 100
+};
+
+static void tft_bl_init(void)
+{
+
+  pwm_opt_t opt = {
+    .diva = 0,
+    .divb = 0,
+    .prea = 0,
+    .preb = 0
+  };
+  /* MCK = OSC0 = 12MHz
+   * Desired output 60kHz
+   * Chosen MCK_DIV_2
+   * CPRD = 12MHz / (60kHz * 2) = 100
+   *
+   * The duty cycle is 100% (CPRD = CDTY)
+   * */
+  pwm_init(&opt);
+  pwm_channel6.CMR.calg = PWM_MODE_LEFT_ALIGNED;
+  pwm_channel6.CMR.cpol = PWM_POLARITY_HIGH; //PWM_POLARITY_LOW;//PWM_POLARITY_HIGH;
+  pwm_channel6.CMR.cpd = PWM_UPDATE_DUTY;
+  pwm_channel6.CMR.cpre = AVR32_PWM_CMR_CPRE_MCK_DIV_2;
+
+  pwm_channel_init(6, &pwm_channel6);
+  pwm_start_channels(AVR32_PWM_ENA_CHID6_MASK);
+
+}
+
 void usart_read_line(char *lineRead,size_t len);
+char* convertIntegerToChar(int N);
+void readImage(char *string_in, char *delimiter, unsigned int output_array[]);
 
 int main(void)
 {
 	pcl_switch_to_osc(PCL_OSC0, FOSC0, OSC0_STARTUP);
+	
+	et024006_Init( FOSC0, FOSC0 );
+	tft_bl_init();
 
 	static const gpio_map_t USART_GPIO_MAP =
 	{
@@ -74,21 +126,19 @@ int main(void)
 	memset(player_one.name, 0, 50); //Esta funcion limpia el arreglo de caracteres. Primero se le pasa el array, con que se llena y la longitud del array.
 	strncpy(player_one.name, "Yarib", 50);
 
+
+	usart_write_line(EXAMPLE_USART,"Ingresa imagen: \n");
+	char img[3000];
 	
-	usart_write_line(EXAMPLE_USART,"\n");
-	usart_write_line(EXAMPLE_USART,player_one.name);
-	usart_write_line(EXAMPLE_USART," please select the number of the option that describes how you would like to accomodate your ships:\n1.- Manual\n2.- Automatic\n");
+	usart_read_line(img,1050);
+	readImage(img,",",photo);
 	
-	usart_write_line(EXAMPLE_USART,"Ingresa un nombre: \n");
-	
-	usart_read_line(player_one.name,50);
-	
-	usart_write_line(EXAMPLE_USART,"El nombre que ingresaste es: ");
-	usart_write_line(EXAMPLE_USART,player_one.name);
+	et024006_DrawFilledRect(0 , 0, ET024006_WIDTH, ET024006_HEIGHT, WHITE );
+	usart_write_line(EXAMPLE_USART,"Aqui la foto: ");
+	et024006_PutPixmap(photo, 20, 0, 0, 0, 0, 20, 20);
 	
 	while(1);
 
-    player_one.modality=atoi(usart_read_line(EXAMPLE_USART)); //Atoi converts char array to int number
 	
 }
 
@@ -155,4 +205,17 @@ char* convertIntegerToChar(int N)
  
     // Return char array
     return (char*)arr;
+}
+
+void readImage(char *string_in, char *delimiter,unsigned int output_array[])
+{
+	char* pch; //create buffer
+	pch = strtok(string_in, delimiter); //begin parsing the values
+	uint8_t i = 0;
+	while (pch != NULL)
+	{
+		output_array[i] = strtol(pch, NULL, 0);
+		pch = strtok(NULL, delimiter);
+		i++;
+	}
 }
