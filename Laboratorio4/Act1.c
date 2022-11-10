@@ -5,14 +5,16 @@
 #include "compiler.h"
 #include "board.h"
 #include "power_clocks_lib.h"
+#include "et024006dhu.h"
+#include "conf_clock.h"
 #include "gpio.h"
 #include "usart.h"
 #include "string.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "pwm.h"
 
 // ***********************   Macros  **********************
 
@@ -74,6 +76,47 @@ int pl_two_agree = 0;
 int num_cells_pone = 0;
 int num_cells_ptwo = 0;
 int num_cells = 0;
+
+//Photo
+unsigned int photo[400]={0};
+avr32_pwm_channel_t pwm_channel6 = {
+/*
+  .cmr = ((PWM_MODE_LEFT_ALIGNED << AVR32_PWM_CMR_CALG_OFFSET)
+    | (PWM_POLARITY_HIGH << AVR32_PWM_CMR_CPOL_OFFSET)
+    | (PWM_UPDATE_DUTY << AVR32_PWM_CMR_CPD_OFFSET)
+    | AVR32_PWM_CMR_CPRE_MCK_DIV_2),
+    */
+  .cdty = 100,
+  //.cdty = 0,
+  .cprd = 100
+};
+
+static void tft_bl_init(void)
+{
+
+  pwm_opt_t opt = {
+    .diva = 0,
+    .divb = 0,
+    .prea = 0,
+    .preb = 0
+  };
+  /* MCK = OSC0 = 12MHz
+   * Desired output 60kHz
+   * Chosen MCK_DIV_2
+   * CPRD = 12MHz / (60kHz * 2) = 100
+   *
+   * The duty cycle is 100% (CPRD = CDTY)
+   * */
+  pwm_init(&opt);
+  pwm_channel6.CMR.calg = PWM_MODE_LEFT_ALIGNED;
+  pwm_channel6.CMR.cpol = PWM_POLARITY_HIGH; //PWM_POLARITY_LOW;//PWM_POLARITY_HIGH;
+  pwm_channel6.CMR.cpd = PWM_UPDATE_DUTY;
+  pwm_channel6.CMR.cpre = AVR32_PWM_CMR_CPRE_MCK_DIV_2;
+
+  pwm_channel_init(6, &pwm_channel6);
+  pwm_start_channels(AVR32_PWM_ENA_CHID6_MASK);
+
+}
 
 // ******************** Prototype Functions ****************
 //Strings
@@ -473,7 +516,7 @@ struct gamer player_two;
 struct gamer getNames(int i);
 void getModality(struct gamer players, int j);
 void playRoutine(struct gamer fisrt_p, struct gamer second_p, int minn_cells);
-
+void readImage(char *string_in, char *delimiter, unsigned int output_array[]);
 // *************************** Main ************************
 
 int main()
@@ -482,7 +525,10 @@ int main()
     //printf("Hi!\nAre you guys ready to have some fun? Sink your enemies' ships "
     //       "to be known as the king of the sea.\n\n");
     pcl_switch_to_osc(PCL_OSC0, FOSC0, OSC0_STARTUP);
-
+	
+	et024006_Init( FOSC0, FOSC0 );
+	tft_bl_init();
+	
 	static const gpio_map_t USART_GPIO_MAP =
 	{
 		{EXAMPLE_USART_RX_PIN, EXAMPLE_USART_RX_FUNCTION},
@@ -506,6 +552,17 @@ int main()
 	usart_init_rs232(EXAMPLE_USART, &USART_OPTIONS, EXAMPLE_TARGET_PBACLK_FREQ_HZ);
 
     usart_write_line(EXAMPLE_USART,"Hi!\nAre you guys ready to have some fun? Sink your enemies' ships to be known as the king of the sea.\n\n");
+
+    usart_write_line(EXAMPLE_USART,"First insert your image array: \n");
+	char img[3000];
+	
+	et024006_DrawFilledRect(0 , 0, ET024006_WIDTH, ET024006_HEIGHT, WHITE );
+	usart_read_line(img,1050);
+	readImage(img,",",photo);
+	
+	et024006_DrawFilledRect(0 , 0, ET024006_WIDTH, ET024006_HEIGHT, WHITE );
+	usart_write_line(EXAMPLE_USART,"Aqui la foto: \n");
+	et024006_PutPixmap(photo, 20, 0, 0, 0, 0, 20, 20);
 
     // Get the players' names
     player_one = getNames(0);
@@ -1040,4 +1097,17 @@ char* convertIntegerToChar(int N)
  
     // Return char array
     return (char*)arr;
+}
+
+void readImage(char *string_in, char *delimiter,unsigned int output_array[])
+{
+	char* pch; //create buffer
+	pch = strtok(string_in, delimiter); //begin parsing the values
+	uint8_t i = 0;
+	while (pch != NULL)
+	{
+		output_array[i] = strtol(pch, NULL, 0);
+		pch = strtok(NULL, delimiter);
+		i++;
+	}
 }
