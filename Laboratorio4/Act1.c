@@ -14,7 +14,6 @@
 #include <string.h>
 #include <time.h>
 
-
 // ***********************   Macros  **********************
 
 #define EXAMPLE_TARGET_PBACLK_FREQ_HZ FOSC0  // PBA clock target frequency, in Hz
@@ -54,7 +53,8 @@
 // Manual Mode
 char board[11][11] = {0};
 char size_board = sizeof(board) / sizeof(board[0]);
-char ships[5] = {5, 4, 3, 3, 2};
+char ships[1] = {5};
+//char ships[5] = {5, 4, 3, 3, 2};
 char size_ships = sizeof(ships) / sizeof(ships[0]);
 char ship_orientation;
 char rep = 0;
@@ -76,24 +76,23 @@ int num_cells_ptwo = 0;
 int num_cells = 0;
 
 // ******************** Prototype Functions ****************
-
-// Manual Mode
-int requirements_msg(char n_ship, char playerssBoard[11][11]);
-int coordinates(char x, char y, char playerssBoard[11][11]);
-int orientation(char n_ship, char playerssBoard[11][11]);
-void printBoard(char playerssBoard[11][11]);
-void setManual(char playerssBoard[11][11]);
-
-// Gameplay
-int getAgree();
-int hitShip(char backend[11][11], char frontend[11][11], int x, int y, int counter);
-int countCells(char backend[11][11]);
-int minCells(int a, int b);
-
 //Strings
 void usart_read_line(char *lineRead, size_t len);
 char* convertIntegerToChar(int N);
 void parseString(char *string_in, char *delimiter, float output_array[]);
+
+// Manual Mode
+int requirements_msg(char n_ship, char playerssBoard[11][11]);
+int coordinates(char x, char y, char playerssBoard[11][11]);
+int orientation(int n_ship, char playerssBoard[11][11]);
+void printBoard(char playerssBoard[11][11]);
+void setManual(char playerssBoard[11][11]);
+
+// Gameplay
+int getAgree(void);
+int hitShip(char backend[11][11], char frontend[11][11], int x, int y, int counter);
+int countCells(char backend[11][11]);
+int minCells(int a, int b);
 
 // ********************** Structures ***********************
 
@@ -102,7 +101,7 @@ struct tableBoard
 {
     char board[11][11];
 };
-struct tableBoard createBoard()
+struct tableBoard createBoard(void)
 {
     struct tableBoard playerBoard;
 
@@ -112,7 +111,7 @@ struct tableBoard createBoard()
         {
             if (i == 0 && j == 0)
             {
-                playerBoard.board[0][j] = 0;
+                playerBoard.board[0][j] = 48;
             }
             else if (i > 0 && j == 0)
             { // row numbers
@@ -124,7 +123,7 @@ struct tableBoard createBoard()
             }
             else
             {
-                playerBoard.board[i][j] = 0;
+                playerBoard.board[i][j] = 48;
             }
         }
     }
@@ -142,38 +141,17 @@ void printPlayerBoard(char playersBoard[11][11])
             if (i + j == 0)
             {
                 //printf("   ");
-                usart_write_line(EXAMPLE_USART,"   ");
+                usart_write_line(EXAMPLE_USART," 0 ");
             }
+			else if(playersBoard[i][j] == 48){
+				usart_write_line(EXAMPLE_USART," 0 ");
+			}
             else if (playersBoard[i][j] < 10)
             {
-                if ((i > 0 && j == 0) || (i == 0 && j > 0))
-                {
-                    //printf(" %i ", playersBoard[i][j]);
-                    usart_write_line(EXAMPLE_USART," ");
-                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
-                    usart_write_line(EXAMPLE_USART," ");
-                }
-                else if (i == 0 && j == 0)
-                {
-                    //printf(" %i ", playersBoard[i][j]);
-                    usart_write_line(EXAMPLE_USART," ");
-                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
-                    usart_write_line(EXAMPLE_USART," ");
-                }
-                else if (playersBoard[i][j] == 0)
-                {
-                    //printf(BLU " %i " RESET, playersBoard[i][j]);
-                    usart_write_line(EXAMPLE_USART," ");
-                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
-                    usart_write_line(EXAMPLE_USART," ");
-                }
-                else
-                {
-                    //printf(YEL " %i " RESET, playersBoard[i][j]);
-                    usart_write_line(EXAMPLE_USART," ");
-                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
-                    usart_write_line(EXAMPLE_USART," ");
-                }
+				usart_write_line(EXAMPLE_USART," ");
+				usart_write_line(EXAMPLE_USART,convertIntegerToChar((int)playersBoard[i][j]));
+				usart_write_line(EXAMPLE_USART," ");
+                
             }
             else
             {
@@ -181,7 +159,7 @@ void printPlayerBoard(char playersBoard[11][11])
                 {
                     //printf("%i ", playersBoard[i][j]);
                     usart_write_line(EXAMPLE_USART," ");
-                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+					usart_write_line(EXAMPLE_USART,convertIntegerToChar((int)playersBoard[i][j]));
                     usart_write_line(EXAMPLE_USART," ");
                 }
             }
@@ -194,11 +172,11 @@ void printPlayerBoard(char playersBoard[11][11])
 void printPlayerBoardwColor(char playersBoard[11][11])
 {
 
-    for (char i = 0; i < 11; i++)
+    for (int i = 0; i < 11; i++)
     {
-        for (char j = 0; j < 11; j++)
+        for (int j = 0; j < 11; j++)
         {
-
+			
             if (i + j == 0)
             {
                 //printf("   ");
@@ -210,20 +188,21 @@ void printPlayerBoardwColor(char playersBoard[11][11])
                 {
                     //printf(" %i ", playersBoard[i][j]);
                     usart_write_line(EXAMPLE_USART," ");
-                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+					usart_write_line(EXAMPLE_USART,convertIntegerToChar((int)playersBoard[i][j]));
                     usart_write_line(EXAMPLE_USART," ");
                 }
                 else
                 {
                     //printf("%i ", playersBoard[i][j]);
                     usart_write_line(EXAMPLE_USART," ");
-                    usart_putchar(EXAMPLE_USART, (char)(48+playersBoard[i][j]));
+                    usart_write_line(EXAMPLE_USART,convertIntegerToChar((int)playersBoard[i][j]));
                     usart_write_line(EXAMPLE_USART," ");
                 }
             }
             else
-            {
-                if (playersBoard[i][j] == 0)
+            {			
+				
+                if (playersBoard[i][j] == 48)
                 {
                     //printf(BLU " * " RESET);
                     usart_write_line(EXAMPLE_USART," * ");
@@ -241,7 +220,7 @@ void printPlayerBoardwColor(char playersBoard[11][11])
                 else
                 {
                     //printf(YEL " * " RESET);
-                    usart_write_line(EXAMPLE_USART," * ");
+                    usart_write_line(EXAMPLE_USART," + ");
                 }
             }
         }
@@ -599,6 +578,9 @@ int main()
     //  printf("%i", num_cells);
     //  printf("%i", num_cells_pone);
     //  printf("%i", num_cells_ptwo);
+	usart_write_line(EXAMPLE_USART,convertIntegerToChar(num_cells_pone));
+	usart_write_line(EXAMPLE_USART,convertIntegerToChar(num_cells_ptwo));
+	usart_write_line(EXAMPLE_USART,convertIntegerToChar(num_cells));
 
     // Finally, we do the game routine
     playRoutine(player_one, player_two, num_cells);
@@ -635,7 +617,7 @@ void getModality(struct gamer players, int j)
            "would like to accomodate your ships:\n1.- Manual\n2.- Automatic\n",
            players.name); */
 
-    usart_write_line(EXAMPLE_USART,"\n");
+    usart_putchar(EXAMPLE_USART,10);
     usart_write_line(EXAMPLE_USART,players.name);
     usart_write_line(EXAMPLE_USART,", please select the number of the option that describes how you would like to accomodate your ships:\n1.- Manual\n2.- Automatic\n");
     
@@ -645,6 +627,7 @@ void getModality(struct gamer players, int j)
 		char modality[2];
 		usart_read_line(modality,2);
         player_one.modality=atoi(modality);
+		usart_putchar(EXAMPLE_USART,48+player_one.modality);
     }
     else
     {
@@ -678,8 +661,11 @@ void setManual(char playerssBoard[11][11])
                 //printf("Horizontal: H\tVertical: V\n");
                 usart_write_line(EXAMPLE_USART,"Horizontal: H\tVertical: V\n");
                 //scanf("%c", &ship_orientation);
-                ship_orientation = usart_getchar(EXAMPLE_USART);
-                if (ship_orientation == 'H' || ship_orientation == 'h')
+				char porientation[2];
+				usart_read_line(porientation,2);
+                ship_orientation = porientation[0];
+
+                if (ship_orientation == 72 || ship_orientation == 104) //H or h
                 {
                     if ((y + ships[n_ship]) > size_board)
                     {
@@ -689,7 +675,7 @@ void setManual(char playerssBoard[11][11])
                         //getchar();
                     }
                 }
-                else if (ship_orientation == 'V' || ship_orientation == 'v')
+                else if (ship_orientation == 86 || ship_orientation == 118) //86 118
                 {
                     if ((x + ships[n_ship]) > size_board)
                     {
@@ -707,7 +693,7 @@ void setManual(char playerssBoard[11][11])
                     err_ht = 0;
                     err_vt = 0;
 
-                    if (ship_orientation == 'H' || ship_orientation == 'h')
+                    if (ship_orientation == 72 || ship_orientation == 104)
                     {
                         if (orientation(n_ship, playerssBoard))
                         {
@@ -717,7 +703,7 @@ void setManual(char playerssBoard[11][11])
                             //getchar();
                         }
                     }
-                    else if (ship_orientation == 'V' || ship_orientation == 'v')
+                    else if (ship_orientation == 86 || ship_orientation == 118)
                     {
                         if (orientation(n_ship, playerssBoard))
                         {
@@ -754,7 +740,8 @@ int getAgree()
     usart_write_line(EXAMPLE_USART,"Above you can see the resulting board. If you like it then please type Y, or if you want to change it please tipe N:\n");       
     //scanf("%s", &temp_agree);
     temp_agree = usart_getchar(EXAMPLE_USART);
-    if (temp_agree == 'N' || temp_agree == 'n')
+	usart_getchar(EXAMPLE_USART);
+    if (temp_agree == 78 || temp_agree == 110) //N or n
     {
         temp_flag = 0;
     }
@@ -762,7 +749,7 @@ int getAgree()
     {
         temp_flag = 1;
         //system("clear");
-        usart_putchar(EXAMPLE_USART, 12); //12 or 13
+        //usart_putchar(EXAMPLE_USART, 12); //12 or 13
     }
     return temp_flag;
 }
@@ -770,16 +757,19 @@ int getAgree()
 int hitShip(char backend[limit][limit], char frontend[limit][limit], int x,
             int y, int counter)
 {
-    int val = backend[x][y];
+    int val = (int)backend[x][y];
 
-    if (val)
+    if (val==1)
     {
         frontend[x][y] = 2;
         //printf("\n*************Ouch \n");
         usart_write_line(EXAMPLE_USART,"\n*************Ouch \n");
+		usart_putchar(EXAMPLE_USART,frontend[x][y]+48);
+		usart_write_line(EXAMPLE_USART,"\n");
+		
         counter += 1;
     }
-    else if (val == 0)
+    else if (val == 48)
     {
         frontend[x][y] = 3;
         //printf("\n*************You missed!!!! \n");
@@ -795,12 +785,16 @@ int countCells(char backend[11][11])
     {
         for (int j = 1; j < 11; j++)
         {
-            if (backend[i][j] > 1)
+            if (backend[i][j] > 1 && backend[i][j] != 48 )
             {
                 sum += 1;
             }
-            else
-            {
+            else if(backend[i][j] == 48 )
+			{
+				sum += 0;
+			}
+			else
+			{
                 sum += backend[i][j];
             }
         }
@@ -854,6 +848,7 @@ void playRoutine(struct gamer first_p, struct gamer second_p, int minn_cells)
             num_cells_pone =
                 hitShip(second_p.playerBoard.board, second_p.frontendBoard.board,
                         x_axis, y_axis, num_cells_pone);
+						
             printPlayerBoardwColor(second_p.frontendBoard.board);
             first_p.turn = 0;
             second_p.turn = 1;
@@ -908,13 +903,12 @@ int requirements_msg(char n_ship, char playerssBoard[11][11])
 
     //printf("Ship No. %d of size %i. Write the coordinate in the Format x,y:\n", n_ship + 1, ships[n_ship]);
     usart_write_line(EXAMPLE_USART,"Ship No. ");
-    usart_write_char(EXAMPLE_USART,(char)(48+n_ship + 1));
-    usart_write_line(EXAMPLE_USART,"of size ");
-    usart_write_char(EXAMPLE_USART,(char)(48+ships[n_ship]));
-    usart_write_line(EXAMPLE_USART,"\n");
-
+    usart_putchar(EXAMPLE_USART,(48+ n_ship + 1));
+    usart_write_line(EXAMPLE_USART," of size ");
+    usart_putchar(EXAMPLE_USART,(48 + ships[n_ship]));
+	usart_write_line(EXAMPLE_USART," Write the coordinate in the Format x,y:\n");
     //scanf("%d,%d", &x, &y);
-    char *input[5];
+    char input[5];
     float output[2];
     usart_read_line(input,5);
     parseString(input,",",output);
@@ -940,30 +934,31 @@ int coordinates(char x, char y, char playerssBoard[11][11])
     return OK;
 }
 
-int orientation(char n_ship, char playerssBoard[11][11])
+int orientation(int n_ship, char playerssBoard[11][11])
 {
-    if (ship_orientation == 'H')
+
+    if (ship_orientation == 72 || ship_orientation == 104)
     {
-        for (int i = 1; i < ships[n_ship]; i++)
+        for (int i = 1; i < (int)ships[n_ship]; i++)
         {
             if (board[x][y + i] == 1)
                 return ERR;
         }
-        for (int i = 1; i < ships[n_ship]; i++)
+        for (int i = 1; i < (int)ships[n_ship]; i++)
         {
             playerssBoard[x][y + i] = 1;
         }
     }
-    else if (ship_orientation == 'V')
+    else if (ship_orientation == 86 || ship_orientation == 118)
     {
-        for (int i = 1; i < ships[n_ship]; i++)
+        for (int i = 1; i < (int)ships[n_ship]; i++)
         {
             if (playerssBoard[x + i][y] == 1)
             {
                 return ERR;
             }
         }
-        for (int i = 1; i < ships[n_ship]; i++)
+        for (int i = 1; i < (int)ships[n_ship]; i++)
         {
             playerssBoard[x + i][y] = 1;
         }
