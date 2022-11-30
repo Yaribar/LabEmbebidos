@@ -1,0 +1,361 @@
+// *********************** Libraries **********************
+#include <avr32/io.h>
+#include "compiler.h"
+#include "board.h"
+#include "power_clocks_lib.h"
+#include "et024006dhu.h"
+#include "gpio.h"
+#include "usart.h"
+#include "string.h"
+#include "stdio.h"
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "pwm.h"
+#include "avr32_logo.h"
+#include "tc.h"
+#include "sysclk.h"
+#include "power_clocks_lib.h"
+#include "delay.h"
+
+
+// ***********************   Macros  **********************
+
+// Conf_clock.h
+//! \note TC module is used in this example.
+#define EXAMPLE_TC (&AVR32_TC)
+//! \note TC Channel 0 is used.
+#define EXAMPLE_TC_CHANNEL 0
+//! \note IRQ0 line of channel 0 is used.
+#define EXAMPLE_TC_IRQ AVR32_TC_IRQ0
+//! \note Interrupt priority 0 is used for TC in this example.
+#define EXAMPLE_TC_IRQ_PRIORITY AVR32_INTC_INT0
+//! \note GPIO PA03 is toggled on compare match in this example.
+#define EXAMPLE_TOGGLE_PIN AVR32_PIN_PA03
+
+#define EXAMPLE_TARGET_PBACLK_FREQ_HZ FOSC0 // PBA clock target frequency, in Hz
+
+// USART1
+
+#define EXAMPLE_USART (&AVR32_USART0)
+#define EXAMPLE_USART_RX_PIN AVR32_USART0_RXD_0_0_PIN
+#define EXAMPLE_USART_RX_FUNCTION AVR32_USART0_RXD_0_0_FUNCTION
+#define EXAMPLE_USART_TX_PIN AVR32_USART0_TXD_0_0_PIN
+#define EXAMPLE_USART_TX_FUNCTION AVR32_USART0_TXD_0_0_FUNCTION
+#define EXAMPLE_USART_CLOCK_MASK AVR32_USART0_CLK_PBA
+#define EXAMPLE_PDCA_CLOCK_HSB AVR32_PDCA_CLK_HSB
+#define EXAMPLE_PDCA_CLOCK_PB AVR32_PDCA_CLK_PBA
+
+#define RIGHT QT1081_TOUCH_SENSOR_RIGHT
+
+// GPIO
+#define LEVEL 3
+#define NLINE 1
+#define LED0 LED0_GPIO
+#define LED1 LED1_GPIO
+#define UP 54
+#define DOWN 55
+#define RIGHT 56
+#define LEFT 57
+#define ENTER 58
+
+// *********************** Variables ******************************
+volatile uint8_t ms10_tick=0,second = 0;
+volatile static uint32_t seconds_tick = 0, minutes_tick = 0, hours_tick = 0;
+uint32_t alarm_clock_seconds = 0, alarm_clock_minutes = 0, alarm_clock_hours = 0;
+
+// ************************ Prototype functions **********************
+// Strings
+void usart_read_line(char *lineRead, size_t len);
+char *convertIntegerToChar(int N);
+void parseString(char *string_in, char *delimiter, float output_array[]);
+void readImage(char *string_in, char *delimiter, unsigned int output_array[]);
+
+
+// Photo
+unsigned int photo[400] = {0};
+avr32_pwm_channel_t pwm_channel6 = {
+    /*
+      .cmr = ((PWM_MODE_LEFT_ALIGNED << AVR32_PWM_CMR_CALG_OFFSET)
+        | (PWM_POLARITY_HIGH << AVR32_PWM_CMR_CPOL_OFFSET)
+        | (PWM_UPDATE_DUTY << AVR32_PWM_CMR_CPD_OFFSET)
+        | AVR32_PWM_CMR_CPRE_MCK_DIV_2),
+        */
+    .cdty = 100,
+    //.cdty = 0,
+    .cprd = 100};
+
+static void tft_bl_init(void)
+{
+
+    pwm_opt_t opt = {
+        .diva = 0,
+        .divb = 0,
+        .prea = 0,
+        .preb = 0};
+    /* MCK = OSC0 = 12MHz
+     * Desired output 60kHz
+     * Chosen MCK_DIV_2
+     * CPRD = 12MHz / (60kHz * 2) = 100
+     *
+     * The duty cycle is 100% (CPRD = CDTY)
+     * */
+    pwm_init(&opt);
+    pwm_channel6.CMR.calg = PWM_MODE_LEFT_ALIGNED;
+    pwm_channel6.CMR.cpol = PWM_POLARITY_HIGH; // PWM_POLARITY_LOW;//PWM_POLARITY_HIGH;
+    pwm_channel6.CMR.cpd = PWM_UPDATE_DUTY;
+    pwm_channel6.CMR.cpre = AVR32_PWM_CMR_CPRE_MCK_DIV_2;
+
+    pwm_channel_init(6, &pwm_channel6);
+    pwm_start_channels(AVR32_PWM_ENA_CHID6_MASK);
+}
+
+__attribute__((__interrupt__)) 
+static void tc_irq(void)
+{
+
+	ms10_tick++;
+
+	// Clear the interrupt flag. This is a side effect of reading the TC SR.
+	tc_read_sr(EXAMPLE_TC, EXAMPLE_TC_CHANNEL);
+	
+	
+	// Toggle the GPIO line
+	if(ms10_tick==100){
+		second = 1;
+		gpio_tgl_gpio_pin(LED1);
+	}
+
+}
+
+static void tc_init(volatile avr32_tc_t *tc)
+{
+
+    // Options for waveform generation.
+    static const tc_waveform_opt_t waveform_opt = {
+        // Channel selection.
+        .channel = EXAMPLE_TC_CHANNEL,
+        // Software trigger effect on TIOB.
+        .bswtrg = TC_EVT_EFFECT_NOOP,
+        // External event effect on TIOB.
+        .beevt = TC_EVT_EFFECT_NOOP,
+        // RC compare effect on TIOB.
+        .bcpc = TC_EVT_EFFECT_NOOP,
+        // RB compare effect on TIOB.
+        .bcpb = TC_EVT_EFFECT_NOOP,
+
+        // Software trigger effect on TIOA.
+        .aswtrg = TC_EVT_EFFECT_NOOP,
+        // External event effect on TIOA.
+        .aeevt = TC_EVT_EFFECT_NOOP,
+        // RC compare effect on TIOA.
+        .acpc = TC_EVT_EFFECT_NOOP,
+        /* RA compare effect on TIOA.
+         * (other possibilities are none, set and clear).
+         */
+        .acpa = TC_EVT_EFFECT_NOOP,
+        /* Waveform selection: Up mode with automatic trigger(reset)
+         * on RC compare.
+         */
+
+        .wavsel = TC_WAVEFORM_SEL_UP_MODE_RC_TRIGGER,
+        // External event trigger enable.
+
+        .enetrg = false,
+        // External event selection.
+        .eevt = 0,
+        // External event edge selection.
+        .eevtedg = TC_SEL_NO_EDGE,
+        // Counter disable when RC compare.
+
+        .cpcdis = false,
+        // Counter clock stopped with RC compare.
+        .cpcstop = false,
+        // Burst signal selection.
+
+        .burst = false,
+        // Clock inversion.
+        .clki = false,
+        // Internal source clock 3, connected to fPBA / 8.
+        .tcclks = TC_CLOCK_SOURCE_TC3};
+
+    // Options for enabling TC interrupts
+    static const tc_interrupt_t tc_interrupt = {
+        .etrgs = 0,
+        .ldrbs = 0,
+        .ldras = 0,
+        .cpcs = 1, // Enable interrupt on RC compare alone
+        .cpbs = 0,
+        .cpas = 0,
+        .lovrs = 0,
+        .covfs = 0};
+    // Initialize the timer/counter.
+    tc_init_waveform(tc, &waveform_opt);
+
+    /*
+     * Set the compare triggers.
+     * We configure it to count every 1 second.
+     * We want: (1 / (fPBA / 8)) * RC = 10ms, hence RC = (fPBA / 8) / 1
+     * to get an interrupt every 10 ms.
+     */
+    tc_write_rc(tc, EXAMPLE_TC_CHANNEL, 6000);
+    // configure the timer interrupt
+    tc_configure_interrupts(tc, EXAMPLE_TC_CHANNEL, &tc_interrupt);
+    // Start the timer/counter.
+    tc_start(tc, EXAMPLE_TC_CHANNEL);
+}
+
+
+
+
+int main(void)
+{
+    pcl_switch_to_osc(PCL_OSC0, FOSC0, OSC0_STARTUP);
+    et024006_Init(FOSC0, FOSC0);
+    tft_bl_init();
+	volatile avr32_tc_t *tc = EXAMPLE_TC;
+	
+	// Disable the interrupts
+	cpu_irq_disable();
+	Disable_global_interrupt();
+	// Initialize interrupt vectors.
+	INTC_init_interrupts();
+	// Register the RTC interrupt handler to the interrupt controller.
+	INTC_register_interrupt(&tc_irq, EXAMPLE_TC_IRQ, EXAMPLE_TC_IRQ_PRIORITY);
+	// Enable the interrupts
+	Enable_global_interrupt();
+	cpu_irq_enable();
+	// Initialize the timer module
+	tc_init(tc);
+
+
+    static const gpio_map_t USART_GPIO_MAP =
+        {
+            {EXAMPLE_USART_RX_PIN, EXAMPLE_USART_RX_FUNCTION},
+            {EXAMPLE_USART_TX_PIN, EXAMPLE_USART_TX_FUNCTION}};
+
+    // USART options.
+    static const usart_options_t USART_OPTIONS =
+        {
+            .baudrate = 38400,
+            .charlength = 8,
+            .paritytype = USART_EVEN_PARITY,
+            .stopbits = USART_2_STOPBITS,
+            .channelmode = USART_NORMAL_CHMODE};
+
+    // Assign GPIO to USART.
+    gpio_enable_module(USART_GPIO_MAP, sizeof(USART_GPIO_MAP) / sizeof(USART_GPIO_MAP[0]));
+
+    // Initialize USART in RS232 mode.
+    usart_init_rs232(EXAMPLE_USART, &USART_OPTIONS, EXAMPLE_TARGET_PBACLK_FREQ_HZ);
+
+
+	et024006_DrawFilledRect(0 , 0, ET024006_WIDTH, ET024006_HEIGHT, WHITE );
+	et024006_PutPixmap(turning_right, 320, 0, 0, 0, 0, 320, 240);
+	
+	while (1)
+	{
+		if (second)
+		{
+			gpio_tgl_gpio_pin(LED0);
+			second = 0;
+		}
+	}
+
+    return 0;
+}
+
+void usart_read_line(char *lineRead, size_t len)
+{
+    char line[len];
+    int i = 0;
+    memset(lineRead, 0, len);
+
+    while (1)
+    {
+        line[i] = usart_getchar(EXAMPLE_USART); // Si se llega a utilizar el buffer "line" hay que limpiarlo antes o cualquier otro buffer
+        if (line[i] == '\n')
+            break;
+        i++;
+    }
+    line[i] = 0;
+
+    strncpy(lineRead, line, len);
+}
+
+void parseString(char *string_in, char *delimiter, float output_array[])
+{
+    char *pch;                          // create buffer
+    pch = strtok(string_in, delimiter); // begin parsing the values
+    uint8_t i = 0;
+    while (pch != NULL)
+    {
+        output_array[i] = atof(pch);
+        pch = strtok(NULL, delimiter);
+        i++;
+    }
+}
+
+char *convertIntegerToChar(int N)
+{
+
+    // Count digits in number N
+    int m = N;
+    int digit = 0;
+    while (m)
+    {
+
+        // Increment number of digits
+        digit++;
+        m /= 10;
+    }
+
+    // Declare char array for result
+    char *arr;
+    // Declare duplicate char array
+    char arr1[digit];
+    // Memory allocation of array
+    arr = (char *)malloc(digit);
+
+    // Separating integer into digits and
+    // accommodate it to character array
+    int index = 0;
+    while (N)
+    {
+
+        // Separate last digit from
+        // the number and add ASCII
+        // value of character '0' is 48
+        arr1[++index] = N % 10 + '0';
+
+        // Truncate the last
+        // digit from the number
+        N /= 10;
+    }
+
+    // Reverse the array for result
+    int i;
+    for (i = 0; i < index; i++)
+    {
+        arr[i] = arr1[index - i];
+    }
+
+    // Char array truncate by null
+    arr[i] = '\0';
+
+    // Return char array
+    return (char *)arr;
+}
+
+void readImage(char *string_in, char *delimiter, unsigned int output_array[])
+{
+    char *pch;                          // create buffer
+    pch = strtok(string_in, delimiter); // begin parsing the values
+    uint8_t i = 0;
+    while (pch != NULL)
+    {
+        output_array[i] = strtol(pch, NULL, 0);
+        pch = strtok(NULL, delimiter);
+        i++;
+    }
+}
